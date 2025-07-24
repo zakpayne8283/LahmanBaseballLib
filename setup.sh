@@ -15,7 +15,7 @@ else
 fi
 
 # Activate the virtual environment
-source .venv/bin/activate
+source .venv/Scripts/activate
 
 # Install dependencies
 if [ -f requirements.txt ]; then
