@@ -13,4 +13,4 @@ else
 fi
 
 # Pass all CLI args to Python entry point
-python src/cli/main.py "$@"
+python src/main.py "$@"

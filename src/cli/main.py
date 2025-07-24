@@ -1,26 +1,23 @@
+# Native libraries
 import argparse
-import pyodbc
+import os
+import sys
 
-# TODO: Move to an .env file or something
-database_name = "lahman2024"
+# My Modules
+from db.models.AllstarApperances import AllstarAppearances
 
-def main():
+def run_cli():
+    # Used for pathing
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    
     print("Starting main function...")
 
-    conn = pyodbc.connect(
-        r'DRIVER={ODBC Driver 17 for SQL Server};'
-        r'SERVER=localhost\SQLEXPRESS;'
-        f'DATABASE={database_name};'
-        r'Trusted_Connection=yes;'
-    )
+    allstars = AllstarAppearances()
+    print(allstars.table_name_full)
 
-    cursor = conn.cursor()
-    cursor.execute("SELECT TOP 5 * FROM dbo.AllstarFull")
-    rows = cursor.fetchall()
-
-    for row in rows:
+    for row in allstars.select():
         print(row)
 
 
 if __name__ == '__main__':
-    main()
+    run_cli()
