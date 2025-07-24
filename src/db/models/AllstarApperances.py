@@ -2,6 +2,6 @@ from db.models.base_table import TableBase
 
 class AllstarAppearances(TableBase):
     
-    def __init__(self):
-        self.table_name = "AllstarFull"
-        super().__init__()
+    @classmethod
+    def table_name(cls):
+        return "AllstarFull"

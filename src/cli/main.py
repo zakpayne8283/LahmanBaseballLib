@@ -12,10 +12,8 @@ def run_cli():
     
     print("Starting main function...")
 
-    allstars = AllstarAppearances()
-    print(allstars.table_name_full)
-
-    for row in allstars.select():
+    # Displays top X Allstar Apperances
+    for row in AllstarAppearances.select():
         print(row)
 
 
