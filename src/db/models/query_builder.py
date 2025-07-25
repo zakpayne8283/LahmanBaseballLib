@@ -9,11 +9,14 @@ class Query:
         # Base table the query is being made on
         self.table_class = table_class
 
-        # Return just a count of the rows?
-        self._count = False
+        # The columns being selected
+        self.columns = []
 
         # The where clauses - only supports ANDs right now
         self.filters = {}
+
+        # The field(s) that will be grouped at the end
+        self.groupings = []
 
         # Tables to join on in the query
         self.joins = {}
@@ -48,11 +51,11 @@ class Query:
         self.joins.update({other_table.table_name_full():field})
         return self
     
-    # Count
-    #   returns the count of the rows
-    #   TODO: Make this more robust?
-    def count(self):
-        self._count = True
+    # Group By
+    #   What fields should be grouped
+    def group_by(self, groupings):
+        self.groupings = groupings
+        self.columns = list(dict.fromkeys(self.columns + groupings))
         return self
     
     # Executes the query
@@ -61,12 +64,11 @@ class Query:
         cursor = self.table_class.get_cursor()
 
         # Limit string
-        limit_string = f"TOP ({self._limit})" if self._limit is not None else ""
-
+        limit_string = f" TOP ({self._limit})" if self._limit is not None else ""
 
         # Specifiy the columns we're selecting
-        # Right now just do all, or a count
-        query_columns = "COUNT(*)" if self._count else "*"
+        # Right now just do all
+        query_columns = " * " if not self.columns else ",".join(self.columns)
 
         # Setup base SQL select
         sql = f"SELECT {limit_string} {query_columns} FROM {self.table_class.table_name_full()}"
@@ -88,6 +90,10 @@ class Query:
                 conditions.append(f"{col} = ?")
                 params.append(val)
             sql += " WHERE " + " AND ".join(conditions)
+
+        # Add groupings here, as needed
+        if self.groupings:
+            sql += " GROUP BY " + ",".join(self.groupings)
 
         # Add applicable orders, if they exist
         if self.orders:
@@ -111,9 +117,9 @@ class Query:
         columns = [col[0] for col in cursor.description]
         rows = cursor.fetchall()
 
-        # If we're just running a COUNT(*), only return the number instead
-        if (self._count):
-            return rows[0][0]
+        # Results should only be an instance if we're selecting the full data
+        # TODO: Maybe there's a way to still return the whole objects?
+        results_as_instance = False if self.joins or self.columns else True
 
         # Return instances of the subclass, with attributes set
         results = []
@@ -122,7 +128,7 @@ class Query:
         for row in rows:
             # Pack the data, create a new object, and store it
             data = dict(zip(columns, row))
-            instance = self.table_class(**data) if self.joins is {} else SimpleNamespace(**data)
+            instance = self.table_class(**data) if results_as_instance is True else SimpleNamespace(**data)
             results.append(instance)
 
         # Return the list of data

@@ -19,7 +19,8 @@ def run_cli():
     #
     ###
 
-    print(People.select().count().execute())
+    for player in AllstarAppearances.select().group_by(["playerID"]).execute():
+        print (player.playerID)
 
 
 if __name__ == '__main__':
