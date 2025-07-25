@@ -6,10 +6,22 @@ class Query:
     # Constructor
     #   table_class is the parent class for this query
     def __init__(self, table_class):
+        # Base table the query is being made on
         self.table_class = table_class
+
+        # Return just a count of the rows?
+        self._count = False
+
+        # The where clauses - only supports ANDs right now
         self.filters = {}
+
+        # Tables to join on in the query
         self.joins = {}
+
+        # Limit the number of items in the query
         self._limit = None
+
+        # Which fields to order by
         self.orders = {}
 
     # Where filter
@@ -36,6 +48,13 @@ class Query:
         self.joins.update({other_table.table_name_full():field})
         return self
     
+    # Count
+    #   returns the count of the rows
+    #   TODO: Make this more robust?
+    def count(self):
+        self._count = True
+        return self
+    
     # Executes the query
     def execute(self):
         # Get the cursor from parent class
@@ -44,8 +63,13 @@ class Query:
         # Limit string
         limit_string = f"TOP ({self._limit})" if self._limit is not None else ""
 
+
+        # Specifiy the columns we're selecting
+        # Right now just do all, or a count
+        query_columns = "COUNT(*)" if self._count else "*"
+
         # Setup base SQL select
-        sql = f"SELECT {limit_string} * FROM {self.table_class.table_name_full()}"
+        sql = f"SELECT {limit_string} {query_columns} FROM {self.table_class.table_name_full()}"
 
         # Join tables, as needed
         if self.joins:
@@ -73,6 +97,9 @@ class Query:
 
             sql += " ORDER BY " + ", ".join(order_bys)
 
+        print("SQL Statement Being Run ------")
+        print(sql)
+
         # Execute the query
         try:
             cursor.execute(sql, params)
@@ -83,6 +110,10 @@ class Query:
         # Get the column and rows
         columns = [col[0] for col in cursor.description]
         rows = cursor.fetchall()
+
+        # If we're just running a COUNT(*), only return the number instead
+        if (self._count):
+            return rows[0][0]
 
         # Return instances of the subclass, with attributes set
         results = []

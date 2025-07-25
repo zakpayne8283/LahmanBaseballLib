@@ -64,6 +64,15 @@ class TableBase:
         cls._query = cls._query.join(other_table, **join_ons)
         return cls._query
     
+    # Static method for returning the count in a query
+    def count(cls):
+        if cls._query is None:
+            raise Exception("ERROR - no existing query. Ensure you've run `select()` first.")
+        
+        cls._query = cls._query.count()
+        return cls._query
+
+
     # Static method for executing a query
     @classmethod
     def execute(cls):

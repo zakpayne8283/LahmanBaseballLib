@@ -19,8 +19,7 @@ def run_cli():
     #
     ###
 
-    for person in People.select().join(AllstarAppearances, "playerID").execute():
-        print(person.nameFirst + " " + person.nameLast)
+    print(People.select().count().execute())
 
 
 if __name__ == '__main__':
