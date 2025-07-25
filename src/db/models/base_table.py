@@ -1,8 +1,10 @@
 from db.connector import get_connection
+from db.models.query_builder import Query
 
 class TableBase:
 
     _connection = None
+    _query = None
 
     # Static method for getting the DB connection in the models
     @classmethod
@@ -31,32 +33,19 @@ class TableBase:
 
     # Static method for making select statements
     @classmethod
-    def select(cls, where_clause="", params=()):
+    def select(cls, **filters):
 
-        # Build query string
-        sql = f"SELECT TOP 1000 * FROM {cls.table_name_full()}" #TODO: Remove "TOP 1000", just used for testing
+        cls._query = Query(cls).where(**filters)
 
-        # Add optional where clause
-        if where_clause:
-            sql += f" WHERE {where_clause}"
+        return cls._query
+    
+    @classmethod
+    def limit(cls, n):
 
-        # Execute query
-        cursor = cls.get_cursor()
-        cursor.execute(sql, params)
-        
-        # Get column names and setup for dict
-        columns = [col[0] for col in cursor.description]
-        # Fetch all rows
-        rows = cursor.fetchall()
+        cls._query = cls._query.limit(n)
 
-        # Return instances of the subclass, with attributes set
-        results = []
-
-        # Put results in a list as objects
-        for row in rows:
-            data = dict(zip(columns, row))
-            instance = cls(**data)
-            results.append(instance)
-
-        # Return list of objects
-        return results
+        return cls._query
+    
+    @classmethod
+    def execute(cls):
+        cls._query.execute()

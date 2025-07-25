@@ -13,7 +13,7 @@ def run_cli():
     print("Starting main function...")
 
     # Displays top X Allstar Apperances - NOTE: `allstar` here is returned as an AllstarApperances instance
-    for allstar in AllstarAppearances.select():
+    for allstar in AllstarAppearances.select(yearID=1970).limit(10).execute():
         print(allstar.playerID)
 
 
