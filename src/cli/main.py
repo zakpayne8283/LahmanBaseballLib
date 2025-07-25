@@ -12,9 +12,9 @@ def run_cli():
     
     print("Starting main function...")
 
-    # Displays top X Allstar Apperances
-    for row in AllstarAppearances.select():
-        print(row)
+    # Displays top X Allstar Apperances - NOTE: `allstar` here is returned as an AllstarApperances instance
+    for allstar in AllstarAppearances.select():
+        print(allstar.playerID)
 
 
 if __name__ == '__main__':

@@ -44,5 +44,19 @@ class TableBase:
         cursor = cls.get_cursor()
         cursor.execute(sql, params)
         
-        # Return rows as result
-        return cursor.fetchall()
+        # Get column names and setup for dict
+        columns = [col[0] for col in cursor.description]
+        # Fetch all rows
+        rows = cursor.fetchall()
+
+        # Return instances of the subclass, with attributes set
+        results = []
+
+        # Put results in a list as objects
+        for row in rows:
+            data = dict(zip(columns, row))
+            instance = cls(**data)
+            results.append(instance)
+
+        # Return list of objects
+        return results
