@@ -6,7 +6,7 @@ class FakeCursor:
     def execute(self, sql, params):
         self.sql = sql
         self.params = params
-        self.description = [('playerID',), ('yearID',), ('teamID',)]
+        self.description = [('playerID',), ('gameNum',), ('gameID',), ('yearID',), ('teamID',), ('lgID',), ('GP',), ('startingPos',)]
     def fetchall(self):
         return [
             ('kalinal01', 1957, 0, 'NLS195707090', 'DET', 'AL', 1, 9)
