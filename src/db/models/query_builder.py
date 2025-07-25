@@ -7,11 +7,18 @@ class Query:
         self.table_class = table_class
         self.filters = {}
         self._limit = None
+        self.orders = {}
 
     # Where filter
     #   translates to SQL's `WHERE X = Y` later
     def where(self, **_filters):
         self.filters.update(_filters)
+        return self
+    
+    # Order By filter
+    #   Specificies which field(s) to order by and the order
+    def order_by(self, **_orders):
+        self.orders.update(_orders)
         return self
     
     # Limit filter
@@ -39,6 +46,14 @@ class Query:
                 conditions.append(f"{col} = ?")
                 params.append(val)
             sql += " WHERE " + " AND ".join(conditions)
+
+        # Add applicable orders, if they exist
+        if self.orders:
+            order_bys = []
+            for field, direction in self.orders.items():
+                order_bys.append(f"{field} {direction.upper()}")
+
+            sql += " ORDER BY " + ", ".join(order_bys)
 
         # Execute the query
         try:

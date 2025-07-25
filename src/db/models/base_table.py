@@ -34,18 +34,32 @@ class TableBase:
     # Static method for making select statements
     @classmethod
     def select(cls, **filters):
-
         cls._query = Query(cls).where(**filters)
-
         return cls._query
     
+    # Static method for adding ORDERBY to a query
+    @classmethod
+    def order_by(cls, **orders):
+        if cls._query is None:
+            raise Exception("ERROR - no existing query. Ensure you've run `select()` first.")
+        
+        cls._query = cls._query.order_by(**orders)
+        return cls._query
+    
+    # Static method for adding a limit to rows returned
     @classmethod
     def limit(cls, n):
-
+        if cls._query is None:
+            raise Exception("ERROR - no existing query. Ensure you've run `select()` first.") 
+        
         cls._query = cls._query.limit(n)
-
         return cls._query
     
+    # Static method for getting unique items only
+
+    # Static method for JOIN on the current query
+    
+    # Static method for executing a query
     @classmethod
     def execute(cls):
         cls._query.execute()

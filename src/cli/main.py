@@ -18,7 +18,8 @@ def run_cli():
     # Testing queries below
     #
     ###
-    for person in People.select(birthMonth=10, birthDay=31).execute():
+
+    for person in People.select(birthYear=1995).order_by(birthMonth='asc', birthDay='asc').execute():
         print(person.full_name() + ", " + person.birth_date())
 
 
