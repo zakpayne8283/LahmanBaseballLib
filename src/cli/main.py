@@ -18,8 +18,8 @@ def run_cli():
     # Testing queries below
     #
     ###
-    for person in People.select(birthYear=1995).execute():
-        print(person.full_name())
+    for person in People.select(birthMonth=10, birthDay=31).execute():
+        print(person.full_name() + ", " + person.birth_date())
 
 
 if __name__ == '__main__':

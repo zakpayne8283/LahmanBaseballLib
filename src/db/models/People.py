@@ -36,3 +36,6 @@ class People(TableBase):
     
     def full_name(self):
         return self.nameFirst + " " + self.nameLast
+    
+    def birth_date(self):
+        return str(self.birthMonth) + "/" + str(self.birthDay) + "/" + str(self.birthYear)

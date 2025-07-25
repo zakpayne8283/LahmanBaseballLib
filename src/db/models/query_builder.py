@@ -25,9 +25,11 @@ class Query:
         # Get the cursor from parent class
         cursor = self.table_class.get_cursor()
 
+        # Limit string
+        limit_string = f"TOP ({self._limit})" if self._limit is not None else ""
+
         # Setup base SQL select
-        # Add the TOP(N) if limit is set
-        sql = f"SELECT {f"TOP ({self._limit})" if self._limit is not None else ""} * FROM {self.table_class.table_name_full()}"
+        sql = f"SELECT {limit_string} * FROM {self.table_class.table_name_full()}"
 
         # Build the filters and the where conditions in the SQL query
         params = []
@@ -39,7 +41,11 @@ class Query:
             sql += " WHERE " + " AND ".join(conditions)
 
         # Execute the query
-        cursor.execute(sql, params)
+        try:
+            cursor.execute(sql, params)
+        except Exception as e:
+            print(f"!!== ERROR: {e}")
+            exit()
 
         # Get the column and rows
         columns = [col[0] for col in cursor.description]
