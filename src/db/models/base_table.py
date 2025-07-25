@@ -54,10 +54,15 @@ class TableBase:
         
         cls._query = cls._query.limit(n)
         return cls._query
-    
-    # Static method for getting unique items only
 
     # Static method for JOIN on the current query
+    @classmethod
+    def join(cls, other_table, **join_ons):
+        if cls._query is None:
+            raise Exception("ERROR - no existing query. Ensure you've run `select()` first.") 
+        
+        cls._query = cls._query.join(other_table, **join_ons)
+        return cls._query
     
     # Static method for executing a query
     @classmethod

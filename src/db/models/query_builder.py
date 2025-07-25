@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 # Query class used in the base_table class to better structure SQL queries
 class Query:
 
@@ -6,6 +8,7 @@ class Query:
     def __init__(self, table_class):
         self.table_class = table_class
         self.filters = {}
+        self.joins = {}
         self._limit = None
         self.orders = {}
 
@@ -27,6 +30,12 @@ class Query:
         self._limit = n
         return self
     
+    # Join
+    #   most basic join with which field(s) to join on
+    def join(self, other_table, field):
+        self.joins.update({other_table.table_name_full():field})
+        return self
+    
     # Executes the query
     def execute(self):
         # Get the cursor from parent class
@@ -37,6 +46,15 @@ class Query:
 
         # Setup base SQL select
         sql = f"SELECT {limit_string} * FROM {self.table_class.table_name_full()}"
+
+        # Join tables, as needed
+        if self.joins:
+            #TODO: Support more than one join here
+            join_statements = []
+            for table, column in self.joins.items():
+                join_statements.append(f" JOIN {table} on {self.table_class.table_name_full()}.{column} = {table}.{column}")
+            
+            sql += "".join(join_statements)
 
         # Build the filters and the where conditions in the SQL query
         params = []
@@ -73,7 +91,7 @@ class Query:
         for row in rows:
             # Pack the data, create a new object, and store it
             data = dict(zip(columns, row))
-            instance = self.table_class(**data)
+            instance = self.table_class(**data) if self.joins is {} else SimpleNamespace(**data)
             results.append(instance)
 
         # Return the list of data

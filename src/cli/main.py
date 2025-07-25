@@ -19,8 +19,8 @@ def run_cli():
     #
     ###
 
-    for person in People.select(birthYear=1995).order_by(birthMonth='asc', birthDay='asc').execute():
-        print(person.full_name() + ", " + person.birth_date())
+    for person in People.select().join(AllstarAppearances, "playerID").execute():
+        print(person.nameFirst + " " + person.nameLast)
 
 
 if __name__ == '__main__':
