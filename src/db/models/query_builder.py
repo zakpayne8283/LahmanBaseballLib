@@ -9,6 +9,9 @@ class Query:
         # Base table the query is being made on
         self.table_class = table_class
 
+        # Aggregation functions to run
+        self.aggregations = {}
+
         # The columns being selected
         self.columns = []
 
@@ -35,6 +38,7 @@ class Query:
     
     # Order By filter
     #   Specificies which field(s) to order by and the order
+    #   Data provided as fieldName=orderDirection (e.g. nameFirst=ASC)
     def order_by(self, **_orders):
         self.orders.update(_orders)
         return self
@@ -47,6 +51,7 @@ class Query:
     
     # Join
     #   most basic join with which field(s) to join on
+    #   Expects data as other_table->class; field="fieldname" (e.g. .join(People, "playerID"))
     def join(self, other_table, field):
         self.joins.update({other_table.table_name_full():field})
         return self
@@ -54,10 +59,19 @@ class Query:
     # Group By
     #   What fields should be grouped
     def group_by(self, groupings):
+        if not isinstance(groupings, list):
+            raise ValueError("Parameter `groupings` must be a list")
+
         self.groupings = groupings
         self.columns = list(dict.fromkeys(self.columns + groupings))
         return self
     
+    # Aggregate
+    #   Maps a given field to an aggregation function
+    def aggregate(self, **aggregations):
+        self.aggregations.update(aggregations)
+        return self
+
     # Executes the query
     def execute(self):
         # Get the cursor from parent class
@@ -68,7 +82,26 @@ class Query:
 
         # Specifiy the columns we're selecting
         # Right now just do all
-        query_columns = " * " if not self.columns else ",".join(self.columns)
+        query_columns = ""
+        if self.columns and not self.joins:
+            query_columns = ",".join(self.columns)
+        elif self.columns and self.joins:
+            # TODO: Add support for the joining table
+            query_columns = ",".join([self.table_class.table_name_full() + "." + c for c in self.columns])
+        else:
+            query_columns = " * "
+
+        # Add the aggregations as needed
+        # for each key in self.aggrgations, generate SQL that corresponds to each list item's key's value with AS being the key
+        # e.g {'count': [{'appearances': '*'}]} ==> COUNT (*) AS appearances
+        if self.aggregations:
+            agg_statements = []
+            for func, fields in self.aggregations.items():
+                for field in fields:
+                    for alias, agg_col in field.items():
+                        agg_statements.append(f"{func.upper()}({agg_col}) AS {alias}")
+            
+            query_columns += ", " + ",".join(agg_statements)
 
         # Setup base SQL select
         sql = f"SELECT {limit_string} {query_columns} FROM {self.table_class.table_name_full()}"
@@ -93,6 +126,9 @@ class Query:
 
         # Add groupings here, as needed
         if self.groupings:
+            if self.joins:
+                self.groupings = [self.table_class.table_name_full() + "." + c for c in self.groupings]
+
             sql += " GROUP BY " + ",".join(self.groupings)
 
         # Add applicable orders, if they exist
@@ -119,7 +155,7 @@ class Query:
 
         # Results should only be an instance if we're selecting the full data
         # TODO: Maybe there's a way to still return the whole objects?
-        results_as_instance = False if self.joins or self.columns else True
+        results_as_instance = False if self.joins or self.columns or self.aggregations else True
 
         # Return instances of the subclass, with attributes set
         results = []

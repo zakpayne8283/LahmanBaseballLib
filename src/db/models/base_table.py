@@ -32,6 +32,7 @@ class TableBase:
         return "dbo." + cls.table_name() #TODO: Add flexability for table_prefix
 
     # Static method for making select statements
+    # TODO: Move **fitlers out to a where() function and replace it with columns to select
     @classmethod
     def select(cls, **filters):
         cls._query = Query(cls).where(**filters)
@@ -70,6 +71,14 @@ class TableBase:
             raise Exception("ERROR - no existing query. Ensure you've run `select()` first.")
         
         cls._query = cls._query.group_by(groupings)
+        return cls._query
+
+    # Aggregation functions are done here
+    def aggregate(cls, **aggregations):
+        if cls._query is None:
+            raise Exception("ERROR - no existing query. Ensure you've run `select()` first.")
+        
+        cls._query = cls._query.aggregate(**aggregations)
         return cls._query
 
     # Static method for executing a query

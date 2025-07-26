@@ -19,8 +19,11 @@ def run_cli():
     #
     ###
 
-    for player in AllstarAppearances.select().group_by(["playerID"]).execute():
-        print (player.playerID)
+    for player in AllstarAppearances.select().join(People, "playerID").aggregate(count=[{"appearances": "*"}]).group_by(["playerID"]).order_by(appearances="DESC").execute():
+        print(player.playerID + " - " + str(player.appearances))
+
+    # for player in AllstarAppearances.select().group_by(["playerID"]).execute():
+    #     print (player.playerID)
 
 
 if __name__ == '__main__':
