@@ -34,8 +34,16 @@ class TableBase:
     # Static method for making select statements
     # TODO: Move **fitlers out to a where() function and replace it with columns to select
     @classmethod
-    def select(cls, **filters):
-        cls._query = Query(cls).where(**filters)
+    def select(cls, *columns):
+        cls._query = Query(cls).select(*columns)
+        return cls._query
+    
+    # Static method for adding where clauses to a query
+    def where(cls, **filters):
+        if cls._query is None:
+            raise Exception("ERROR - no existing query. Ensure you've run `select()` first.")
+        
+        cls._query = cls._query.where(**filters)
         return cls._query
     
     # Static method for adding ORDERBY to a query

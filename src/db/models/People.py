@@ -1,3 +1,4 @@
+from db.models.AllstarApperances import AllstarAppearances
 from db.models.base_table import TableBase
 
 class People(TableBase):
@@ -29,13 +30,33 @@ class People(TableBase):
         self.finalGame = finalGame
         self.retroID = retroID
 
-
+    # Name of the People table in the DB
     @classmethod
     def table_name(cls):
         return "People"
+    
+    # Returns the number of allstar apperances for each player
+    @classmethod
+    def allstar_apperances(cls, _player_id=None, _year=None):
+        
+        query = People.select("nameFirst", "nameLast").join(AllstarAppearances, "playerID")
+
+        if _player_id is not None:
+            query.where(player_id=_player_id)
+
+        if _year is not None:
+            query.where(yearID=_year)
+
+        query = (query.aggregate(count=[{"appearances": "*"}])
+                      .group_by(["playerID", "nameFirst", "nameLast"])
+                      .order_by(appearances="DESC")
+                      .limit(10))
+
+        return (query.execute())
     
     def full_name(self):
         return self.nameFirst + " " + self.nameLast
     
     def birth_date(self):
         return str(self.birthMonth) + "/" + str(self.birthDay) + "/" + str(self.birthYear)
+    

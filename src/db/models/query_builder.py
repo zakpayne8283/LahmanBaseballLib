@@ -30,8 +30,16 @@ class Query:
         # Which fields to order by
         self.orders = {}
 
+    # Select statement
+    #   chooses which columns to display from the parent table
+    #   TODO: Update this to accept columns from joined tables?
+    def select(self, *columns):
+        self.columns.extend(columns)
+        return self
+
     # Where filter
     #   translates to SQL's `WHERE X = Y` later
+    #   TODO: update this to take other comparison operators
     def where(self, **_filters):
         self.filters.update(_filters)
         return self
