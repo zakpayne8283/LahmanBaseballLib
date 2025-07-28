@@ -92,4 +92,4 @@ class TableBase:
     # Static method for executing a query
     @classmethod
     def execute(cls):
-        cls._query.execute()
+        return cls._query.execute()

@@ -15,4 +15,4 @@ echo "Running pytest..."
 pytest
 
 echo "Checking code coverage..."
-pytest --cov=src --cov-config=.coveragerc
+pytest --cov=src --cov-config=.coveragerc --cov-report=term-missing

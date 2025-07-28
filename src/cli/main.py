@@ -17,7 +17,7 @@ def run_cli():
     #
     ###
 
-    sql = People.select().aggregate(count=[{"player": "*"}]).build_query()
+    sql = AllstarAppearances.select().aggregate(count=[{"yearCol":"*"}]).group_by("yearID").build_query()
     print(sql)
     
 
