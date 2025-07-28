@@ -17,9 +17,7 @@ def run_cli():
     #
     ###
 
-    sql = AllstarAppearances.select().aggregate(count=[{"yearCol":"*"}]).group_by("yearID").build_query()
-    print(sql)
-    
+    AllstarAppearances.select().where(yearID=2000).execute()
 
     # for player in People.allstar_apperances():
     #     print(player.playerID + " - " + player.nameFirst + " " + player.nameLast + " - " + str(player.appearances))
