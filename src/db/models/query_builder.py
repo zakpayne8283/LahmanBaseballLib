@@ -131,7 +131,7 @@ class Query:
         if self.filters:
             conditions = []
             for col, val in self.filters.items():
-                conditions.append(f"{col} = ?")
+                conditions.append(f"{self.table_class.table_name_full()}.{col} = ?")
                 params.append(val)
             sql += " WHERE " + " AND ".join(conditions)
 

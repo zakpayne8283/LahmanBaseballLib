@@ -37,18 +37,15 @@ class People(TableBase):
     
     # Returns the number of allstar apperances for each player
     @classmethod
-    def allstar_apperances(cls, _player_id=None, _year=None):
+    def allstar_apperances(cls, player_id=None, year_id=None):
         
         query = People.select("nameFirst", "nameLast").join(AllstarAppearances, "playerID")
 
-        if _player_id is not None:
-            query.where(player_id=_player_id)
-
-        if _year is not None:
-            query.where(yearID=_year)
+        if player_id is not None:
+            query.where(playerID=player_id)
 
         query = (query.aggregate(count=[{"appearances": "*"}])
-                      .group_by(["playerID", "nameFirst", "nameLast"])
+                      .group_by("playerID", "nameFirst", "nameLast")
                       .order_by(appearances="DESC"))
 
         return (query.execute())
