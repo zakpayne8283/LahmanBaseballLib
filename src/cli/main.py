@@ -19,8 +19,8 @@ def run_cli():
 
     # AllstarAppearances.select().where(yearID=2000).execute()
 
-    for player in People.select().where(birthYear="1979").execute():
-        print(player.playerID + " - " + player.nameFirst + " " + player.nameLast)
+    for player in People.select().where(birthYear__gte="2000").execute():
+        print(player.playerID + " - " + player.nameFirst + " " + player.nameLast + " " + player.birth_date())
 
 
 if __name__ == '__main__':

@@ -90,6 +90,7 @@ class Query:
 
     # Build SQL query
     #   Builds the SQL query and returns it as a string, plus any where parameters
+    #   TODO: Might be nice to break this into multiple methods for clarity?
     def build_query(self):
         # Limit string
         limit_string = f" TOP ({self._limit})" if self._limit is not None else ""
@@ -142,7 +143,7 @@ class Query:
                     # Get the name and operation
                     col_name, op = col.split("__")
                     # Get the specific operation
-                    sql_op = {"gt": ">", "lt": "<", "ne": "!=", "like": "LIKE", "in": "IN"}[op]
+                    sql_op = {"gt": ">", "gte": ">=", "lt": "<", "lte": "<=", "ne": "!=", "like": "LIKE", "in": "IN"}[op]
                     # Finish the clause
                     where_string += f"{col_name} {sql_op} ?"
                 else:
