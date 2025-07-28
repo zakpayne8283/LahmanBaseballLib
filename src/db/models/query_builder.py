@@ -16,7 +16,7 @@ class Query:
         self.columns = []
 
         # The where clauses - only supports ANDs right now
-        self.filters = {}
+        self.wheres = {}
 
         # The field(s) that will be grouped at the end
         self.groupings = []
@@ -42,8 +42,9 @@ class Query:
     #   translates to SQL's `WHERE X = Y` later
     #   TODO: update this to take other comparison operators
     #   Expects **_fitlers as column=value (e.g.) .where(nameFirst="Alex")
-    def where(self, **_filters):
-        self.filters.update(_filters)
+    def where(self, **_wheres):
+        self.wheres.update(_wheres)
+        print(self.wheres)
         return self
     
     # Order By filter
@@ -87,6 +88,8 @@ class Query:
         self.aggregations.update(aggregations)
         return self
 
+    # Build SQL query
+    #   Builds the SQL query and returns it as a string, plus any where parameters
     def build_query(self):
         # Limit string
         limit_string = f" TOP ({self._limit})" if self._limit is not None else ""
@@ -128,11 +131,28 @@ class Query:
 
         # Build the filters and the where conditions in the SQL query
         params = []
-        if self.filters:
+        if self.wheres:
             conditions = []
-            for col, val in self.filters.items():
-                conditions.append(f"{self.table_class.table_name_full()}.{col} = ?")
+            # Loop through each WHERE clause
+            for col, val in self.wheres.items():
+                # Setup the base clause
+                where_string = f"{self.table_class.table_name_full()}."
+                # If __ is present in the column, apply an operator other than "=" to it
+                if "__" in col:
+                    # Get the name and operation
+                    col_name, op = col.split("__")
+                    # Get the specific operation
+                    sql_op = {"gt": ">", "lt": "<", "ne": "!=", "like": "LIKE", "in": "IN"}[op]
+                    # Finish the clause
+                    where_string += f"{col_name} {sql_op} ?"
+                else:
+                    # Just give a basic where clause
+                    where_string += f"{col} = ?"
+                # Add the finished clause to our list
+                conditions.append(where_string)
+                # Add the parameter for what's passed to the SQL query
                 params.append(val)
+            # Add where clauses to the SQL query
             sql += " WHERE " + " AND ".join(conditions)
 
         # Add groupings here, as needed

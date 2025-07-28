@@ -14,13 +14,16 @@ def test_select():
     assert len(results) > 0
 
 # Running a SELECT statement with a specified playerID should return a single player back
-def test_select_where():
+def test_where():
 
     # Testing this with ID=jacksbo01 ==> Bo Jackson will not play another all star game (although I bet he still could)
     results = AllstarAppearances.select().where(playerID='jacksbo01').execute()
 
     assert len(results) == 1
     assert results[0].playerID == 'jacksbo01'
+
+    results = AllstarAppearances.select().where(yearID__gt=2000).execute()
+    assert len(results) > 0
 
 # ORDER BY should return the lowest year
 def test_order_by():
