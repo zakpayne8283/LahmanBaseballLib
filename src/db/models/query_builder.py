@@ -33,6 +33,7 @@ class Query:
     # Select statement
     #   chooses which columns to display from the parent table
     #   TODO: Update this to accept columns from joined tables?
+    #   Expects columns as strings (e.g.) .select("nameFirst")
     def select(self, *columns):
         self.columns.extend(columns)
         return self
@@ -40,6 +41,7 @@ class Query:
     # Where filter
     #   translates to SQL's `WHERE X = Y` later
     #   TODO: update this to take other comparison operators
+    #   Expects **_fitlers as column=value (e.g.) .where(nameFirst="Alex")
     def where(self, **_filters):
         self.filters.update(_filters)
         return self
@@ -53,6 +55,7 @@ class Query:
     
     # Limit filter
     #   translates to TOP(N) later
+    #   Expects n as integer
     def limit(self, n):
         self._limit = n
         return self
@@ -66,25 +69,25 @@ class Query:
     
     # Group By
     #   What fields should be grouped
-    def group_by(self, groupings):
-        if not isinstance(groupings, list):
-            raise ValueError("Parameter `groupings` must be a list")
+    #   Expects *groups as strings (e.g.) .group_by("playerID")
+    def group_by(self, *groupings):
+        # Add the groupings if they haven't already been added
+        for group in groupings:
+            if group not in self.groupings:
+                self.groupings.append(group)
 
-        self.groupings = groupings
-        self.columns = list(dict.fromkeys(self.columns + groupings))
+        # Update the columns selected
+        self.columns = list(dict.fromkeys(self.columns + self.groupings))
         return self
     
     # Aggregate
     #   Maps a given field to an aggregation function
+    #   Expects **aggregations as (e.g.) count=[{"player": "*"}]
     def aggregate(self, **aggregations):
         self.aggregations.update(aggregations)
         return self
 
-    # Executes the query
-    def execute(self):
-        # Get the cursor from parent class
-        cursor = self.table_class.get_cursor()
-
+    def build_query(self):
         # Limit string
         limit_string = f" TOP ({self._limit})" if self._limit is not None else ""
 
@@ -119,7 +122,7 @@ class Query:
             #TODO: Support more than one join here
             join_statements = []
             for table, column in self.joins.items():
-                join_statements.append(f" JOIN {table} on {self.table_class.table_name_full()}.{column} = {table}.{column}")
+                join_statements.append(f" JOIN {table} ON {self.table_class.table_name_full()}.{column} = {table}.{column}")
             
             sql += "".join(join_statements)
 
@@ -149,6 +152,15 @@ class Query:
 
         print("SQL Statement Being Run ------")
         print(sql)
+        return sql, params
+
+    # Executes the query
+    def execute(self):
+        # Get the cursor from parent class
+        cursor = self.table_class.get_cursor()
+
+        # Get the SQL and parameters
+        sql, params = self.build_query()
 
         # Execute the query
         try:

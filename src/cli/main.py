@@ -17,8 +17,12 @@ def run_cli():
     #
     ###
 
-    for player in People.allstar_apperances():
-        print(player.nameFirst + " " + player.nameLast + " - " + str(player.appearances))
+    sql = People.select().aggregate(count=[{"player": "*"}]).build_query()
+    print(sql)
+    
+
+    # for player in People.allstar_apperances():
+    #     print(player.playerID + " - " + player.nameFirst + " " + player.nameLast + " - " + str(player.appearances))
 
 
 if __name__ == '__main__':
