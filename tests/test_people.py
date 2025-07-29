@@ -36,6 +36,9 @@ def test_allstar_apperances():
     as_apperances = People.allstar_apperances()
     assert len(as_apperances) == 2017 #TODO: Keep an eye on this, subject to change
 
+    as_apperances = People.allstar_apperances(limit=10)
+    assert len(as_apperances) == 10
+
     as_apperances = People.allstar_apperances(player_id="aaronha01")
     assert len(as_apperances) == 1
 

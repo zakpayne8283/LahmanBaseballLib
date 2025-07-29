@@ -31,6 +31,12 @@ class TableBase:
     def table_name_full(cls):
         return "dbo." + cls.table_name() #TODO: Add flexability for table_prefix
 
+    # Converts a column name to the desired name for the table
+    # TODO: Worth adding each column individually? E.g. People.firstName()
+    @classmethod
+    def column(cls, column_name):
+        return cls.table_name_full() + "." + column_name
+
     # Static method for making select statements
     # TODO: Move **fitlers out to a where() function and replace it with columns to select
     @classmethod

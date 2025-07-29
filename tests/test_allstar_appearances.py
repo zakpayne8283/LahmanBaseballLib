@@ -55,3 +55,8 @@ def test_aggregate():
 
     assert len(results) == 91   # TODO: Keep an eye on this, subject to change
     assert results[0].playerCount == 76 # 76 players in the 2024 AS Game
+
+def test_allstar_sub_appearances():
+    as_appearances = AllstarAppearances.most_non_starting_appearances()
+
+    assert len(as_appearances) > 0

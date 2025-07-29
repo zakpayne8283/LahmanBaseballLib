@@ -48,7 +48,7 @@ class People(TableBase):
             query.limit(limit)
 
         query = (query.aggregate(count=[{"appearances": "*"}])
-                      .group_by("playerID", "nameFirst", "nameLast")
+                      .group_by(People.column("playerID"), "nameFirst", "nameLast")
                       .order_by(appearances="DESC"))
 
         return (query.execute())
