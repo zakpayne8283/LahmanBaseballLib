@@ -96,14 +96,9 @@ class Query:
 
         # Specifiy the columns we're selecting
         # Right now just do all
-        query_columns = ""
-        if self.columns and not self.joins:
-            query_columns = ",".join(self.columns)
-        elif self.columns and self.joins:
-            # TODO: Add support for the joining table
-            query_columns = ",".join([self.table_class.table_name_full() + "." + c for c in self.columns])
-        else:
-            query_columns = " * "
+        # TODO: Maybe find a way this works a bit better, especially for joins
+        # TODO: Right now I would have to specify the column names in full and that's a hassle
+        query_columns = ",".join(self.columns) if self.columns else " * "
 
         # Add the aggregations as needed
         # for each key in self.aggrgations, generate SQL that corresponds to each list item's key's value with AS being the key
@@ -129,14 +124,16 @@ class Query:
             
             sql += "".join(join_statements)
 
-        # Build the filters and the where conditions in the SQL query
+        # Build the where conditions in the SQL query
         params = []
         if self.wheres:
             conditions = []
             # Loop through each WHERE clause
             for col, val in self.wheres.items():
+
                 # Setup the base clause
                 where_string = f"{self.table_class.table_name_full()}."
+
                 # If __ is present in the column, apply an operator other than "=" to it
                 if "__" in col:
                     # Get the name and operation
@@ -145,21 +142,24 @@ class Query:
                     sql_op = {"gt": ">", "gte": ">=", "lt": "<", "lte": "<=", "ne": "!=", "like": "LIKE", "in": "IN"}[op]
                     # Finish the clause
                     where_string += f"{col_name} {sql_op} ?"
+                elif val == None:
+                    where_string += f"{col} IS NULL"
                 else:
                     # Just give a basic where clause
                     where_string += f"{col} = ?"
+
                 # Add the finished clause to our list
                 conditions.append(where_string)
-                # Add the parameter for what's passed to the SQL query
-                params.append(val)
+
+                # Add the parameter for what's passed to the SQL query, if not None
+                if val is not None:
+                    params.append(val)
+
             # Add where clauses to the SQL query
             sql += " WHERE " + " AND ".join(conditions)
 
         # Add groupings here, as needed
         if self.groupings:
-            if self.joins:
-                self.groupings = [self.table_class.table_name_full() + "." + c for c in self.groupings]
-
             sql += " GROUP BY " + ",".join(self.groupings)
 
         # Add applicable orders, if they exist
@@ -179,6 +179,8 @@ class Query:
 
         # Get the SQL and parameters
         sql, params = self.build_query()
+
+        print(sql)
 
         # Execute the query
         try:

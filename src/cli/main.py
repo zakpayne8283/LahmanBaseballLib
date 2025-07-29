@@ -18,7 +18,7 @@ def run_cli():
     #
     ###
 
-    allstar_charts.top_ten_allstars()
+    allstar_charts.top_ten_allstar_subs()
 
 
 

@@ -17,3 +17,22 @@ class AllstarAppearances(TableBase):
     @classmethod
     def table_name(cls):
         return "AllstarFull"
+
+    @classmethod
+    def most_non_starting_appearances(cls):
+        from db.models.People import People
+
+        nameFirst = f"{People.table_name_full()}.nameFirst"
+        nameLast = f"{People.table_name_full()}.nameLast"
+
+        results = (
+            AllstarAppearances.select(nameFirst, nameLast)
+                              .join(People, "playerID")
+                              .limit(10)
+                              .where(startingPos=None)
+                              .aggregate(count=[{"subAppearances": "*"}])
+                              .group_by(nameFirst, nameLast)
+                              .order_by(subAppearances="DESC")
+                              .execute())
+        
+        return results
