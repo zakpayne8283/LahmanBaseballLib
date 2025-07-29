@@ -6,6 +6,7 @@ import sys
 # My Modules
 from db.models.AllstarApperances import AllstarAppearances
 from db.models.People import People
+from charts import allstar_charts
 
 def run_cli():
     
@@ -17,10 +18,8 @@ def run_cli():
     #
     ###
 
-    # AllstarAppearances.select().where(yearID=2000).execute()
+    allstar_charts.top_ten_allstars()
 
-    for player in People.select().where(birthYear__gte="2000").execute():
-        print(player.playerID + " - " + player.nameFirst + " " + player.nameLast + " " + player.birth_date())
 
 
 if __name__ == '__main__':

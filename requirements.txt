@@ -1,3 +1,5 @@
+matplotlib
+numpy
 pyodbc
 pytest
 pytest-cov

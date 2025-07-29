@@ -44,7 +44,6 @@ class Query:
     #   Expects **_fitlers as column=value (e.g.) .where(nameFirst="Alex")
     def where(self, **_wheres):
         self.wheres.update(_wheres)
-        print(self.wheres)
         return self
     
     # Order By filter
@@ -171,8 +170,6 @@ class Query:
 
             sql += " ORDER BY " + ", ".join(order_bys)
 
-        print("SQL Statement Being Run ------")
-        print(sql)
         return sql, params
 
     # Executes the query

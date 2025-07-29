@@ -1,5 +1,6 @@
 from db.models.base_table import TableBase
 
+#TODO: Fix all instances where I've mistakenly spelled it apperances
 class AllstarAppearances(TableBase):
     
     # Constructor - used for returning instances of AllstarAppearances in super().select()
