@@ -3,8 +3,6 @@ from types import SimpleNamespace
 # Query class used in the base_table class to better structure SQL queries
 class Query:
     # To build out sub-queries, I'll need to do the following:
-    # - make it so table_class can take a None
-    #   - This is so that we could theoretically do something like SELECT * FROM (SELECT [...])
     # - add a HAVING statement, which can also take Query() objects
     # - allow for WHERE clauses to take Query() objects
     # Maybe more but let's just see what happens
@@ -43,8 +41,27 @@ class Query:
     def select(self, *columns):
         self.columns.extend(columns)
         return self
+    
+    def _build_from_query(self):
+        # TODO: Handle potential recursive subqueries and their namings - they can't all be named temp
+        # If the FROM table is a query, we need to recursively generate that query too.
+        if isinstance(self.from_table, Query):
+            return f"FROM ({self.from_table.build_query()}) AS temp"
+        else:
+            return f"FROM {self.from_table.table_name_full()}"
 
-    # Where filter
+    # Build columns that are being selected
+    def _build_columns_query(self):
+        # Specifiy the columns we're selecting
+        # Right now just do all
+        # TODO: Maybe find a way this works a bit better, especially for joins
+        # TODO: Right now I would have to specify the column names in full and that's a hassle
+        if self.columns:
+            return f" {",".join(self.columns)} "
+        else:
+            return " * "
+
+    # WHERE queries
     #   translates to SQL's `WHERE X = Y` later
     #   Expects **_wheres as column=value (e.g.) .where(nameFirst="Alex")
     #   Also accepts comparison values: column__op=value (e.g.) .where(yearID__gt=1980) --> yearID > 1980
@@ -52,6 +69,39 @@ class Query:
         self.wheres.update(_wheres)
         return self
     
+    # Build the WHERE queries
+    def _build_where_query(self):
+        if self.wheres:
+            where_clauses = []
+            # Loop through each WHERE clause
+            for col, val in self.wheres.items():
+                # Setup the base clause
+                # TODO: Modify this to work with JOINs (e.g. where a.year > 1900 AND b.year < 2000)
+                where_string = f"{self.from_table.table_name_full()}."
+
+                # If __ is present in the column, apply an operator other than "=" to it
+                if "__" in col:
+                    # Get the name and operation
+                    col_name, op = col.split("__")
+                    # Get the specific operation
+                    sql_op = {"gt": ">", "gte": ">=", "lt": "<", "lte": "<=", "ne": "!=", "like": "LIKE", "in": "IN"}[op]
+                    # Finish the clause
+                    # TODO Probably want some sort of check for val here at some point
+                    where_string += f"{col_name} {sql_op} {str(val)}"
+                elif val == None:
+                    where_string += f"{col} IS NULL"
+                else:
+                    # Just give a basic where clause
+                    where_string += f"{col} = '{str(val)}'"
+
+                # Add the finished clause to our list
+                where_clauses.append(where_string)
+
+            # Add where clauses to the SQL query
+            return " WHERE " + " AND ".join(where_clauses)
+        else:
+            return ""
+
     # Order By filter
     #   Specificies which field(s) to order by and the order
     #   Data provided as fieldName=orderDirection (e.g. nameFirst=ASC)
@@ -59,6 +109,17 @@ class Query:
         self.orders.update(_orders)
         return self
     
+    def _build_orderby_query(self):
+        # Add applicable orders, if they exist
+        if self.orders:
+            order_bys = []
+            for field, direction in self.orders.items():
+                order_bys.append(f"{field} {direction.upper()}")
+
+            return " ORDER BY " + ", ".join(order_bys)
+        else:
+            return ""
+
     # Limit filter
     #   translates to TOP(N) later
     #   Expects n as integer
@@ -66,6 +127,13 @@ class Query:
         self._limit = n
         return self
     
+    # Build limit filter SQL
+    def _build_limit_query(self):
+        if self._limit is not None:
+            return f" TOP ({self._limit})"
+        else:
+            return ""
+
     # Join
     #   most basic join with which field(s) to join on
     #   Expects data as other_table->class; field="fieldname" (e.g. .join(People, "playerID"))
@@ -73,6 +141,19 @@ class Query:
         self.joins.update({other_table.table_name_full():field})
         return self
     
+    # Build JOIN query
+    def _build_join_query(self):
+        # Join tables, as needed
+        if self.joins:
+            #TODO: Support more than one join here, specifically the ON statement
+            join_statements = []
+            for table, column in self.joins.items():
+                join_statements.append(f" JOIN {table} ON {self.from_table.table_name_full()}.{column} = {table}.{column}")
+            
+            return "".join(join_statements)
+        else:
+            return ""
+
     # Group By
     #   What fields should be grouped
     #   Expects *groups as strings (e.g.) .group_by("playerID")
@@ -86,6 +167,13 @@ class Query:
         self.columns = list(dict.fromkeys(self.columns + self.groupings))
         return self
     
+    # Build GROUP BY query
+    def _build_groupby_query(self):
+        if self.groupings:
+            return " GROUP BY " + ",".join(self.groupings)
+        else:
+            return ""
+
     # Aggregate
     #   Maps a given field to an aggregation function
     #   Expects **aggregations as (e.g.) count=[{"player": "*"}]
@@ -93,24 +181,8 @@ class Query:
         self.aggregations.update(aggregations)
         return self
 
-    # Build SQL query
-    #   Builds the SQL query and returns it as a string, plus any where parameters
-    #   TODO: Might be nice to break this into multiple methods for clarity?
-    def build_query(self):
-        
-        # Build the FROM string
-        # TODO: Handle potential recursive subqueries and their namings - they can't all be named temp
-        from_string = f"({self.from_table.build_query()[0]}) AS temp" if isinstance(self.from_table, Query) else self.from_table.table_name_full()
-
-        # Limit string
-        limit_string = f" TOP ({self._limit})" if self._limit is not None else ""
-
-        # Specifiy the columns we're selecting
-        # Right now just do all
-        # TODO: Maybe find a way this works a bit better, especially for joins
-        # TODO: Right now I would have to specify the column names in full and that's a hassle
-        query_columns = ",".join(self.columns) if self.columns else " * "
-
+    # Build aggregated columns
+    def _build_aggregates_query(self):
         # Add the aggregations as needed
         # for each key in self.aggrgations, generate SQL that corresponds to each list item's key's value with AS being the key
         # e.g {'count': [{'appearances': '*'}]} ==> COUNT (*) AS appearances
@@ -121,84 +193,60 @@ class Query:
                     for alias, agg_col in field.items():
                         agg_statements.append(f"{func.upper()}({agg_col}) AS {alias}")
             
-            query_columns += ", " + ",".join(agg_statements)
+            return (", " if self.columns else "") + (",".join(agg_statements)) + " "
+        else:
+            return ""
 
-        # Setup base SQL select
-        sql = f"SELECT {limit_string} {query_columns} FROM {from_string}"
+    # Build SQL query
+    #   Builds the SQL query and returns it as a string, plus any where parameters
+    #   TODO: Might be nice to break this into multiple methods for clarity?
+    def build_query(self):
 
-        # Join tables, as needed
-        if self.joins:
-            #TODO: Support more than one join here
-            join_statements = []
-            for table, column in self.joins.items():
-                join_statements.append(f" JOIN {table} ON {self.from_table.table_name_full()}.{column} = {table}.{column}")
-            
-            sql += "".join(join_statements)
+        # Build the query piece by piece
+        sql = "SELECT"
 
-        # Build the where conditions in the SQL query
-        # TODO: Rework this to just specify the WHERE statements inline, for subqueries to work right
-        params = []
-        if self.wheres:
-            conditions = []
-            # Loop through each WHERE clause
-            for col, val in self.wheres.items():
+        # Add limit statement (TOP(N))
+        sql += self._build_limit_query()
+        
+        # Add specific columns to statement
+        sql += self._build_columns_query()
 
-                # Setup the base clause
-                where_string = f"{self.from_table.table_name_full()}."
+        # Add aggregated columns to statement
+        sql += self._build_aggregates_query()
 
-                # If __ is present in the column, apply an operator other than "=" to it
-                if "__" in col:
-                    # Get the name and operation
-                    col_name, op = col.split("__")
-                    # Get the specific operation
-                    sql_op = {"gt": ">", "gte": ">=", "lt": "<", "lte": "<=", "ne": "!=", "like": "LIKE", "in": "IN"}[op]
-                    # Finish the clause
-                    where_string += f"{col_name} {sql_op} ?"
-                elif val == None:
-                    where_string += f"{col} IS NULL"
-                else:
-                    # Just give a basic where clause
-                    where_string += f"{col} = ?"
+        # Build the FROM string
+        sql += self._build_from_query()
 
-                # Add the finished clause to our list
-                conditions.append(where_string)
+        # Build any JOIN queries
+        sql += self._build_join_query()
 
-                # Add the parameter for what's passed to the SQL query, if not None
-                if val is not None:
-                    params.append(val)
+        # Build any WHERE statements
+        sql += self._build_where_query()
 
-            # Add where clauses to the SQL query
-            sql += " WHERE " + " AND ".join(conditions)
+        # Build any GROUP BY statements
+        sql += self._build_groupby_query()
 
-        # Add groupings here, as needed
-        if self.groupings:
-            sql += " GROUP BY " + ",".join(self.groupings)
+        # Build any ORDER BY statements
+        sql += self._build_orderby_query()
 
-        # Add applicable orders, if they exist
-        if self.orders:
-            order_bys = []
-            for field, direction in self.orders.items():
-                order_bys.append(f"{field} {direction.upper()}")
-
-            sql += " ORDER BY " + ", ".join(order_bys)
-
-        return sql, params
+        return sql
 
     # Executes the query
     def execute(self):
-        # Get the cursor from parent class
+        # Get the cursor from base table class
+        # TODO: Probably just want some sort of connector, not in a query-related class...?
         from db.models.base_table import TableBase
         cursor = TableBase.get_cursor()
 
         # Get the SQL and parameters
-        sql, params = self.build_query()
+        sql = self.build_query()
 
         print("Running SQL query: ")
         print(sql)
 
         # Execute the query
         try:
-            cursor.execute(sql, params)
+            cursor.execute(sql)
         except Exception as e:
             print(f"!!== ERROR: {e}")
             exit()

@@ -18,14 +18,14 @@ def test_select():
     # Empty select
     query = query.select()
     # Extract the query
-    sql = query.build_query()[0]
+    sql = query.build_query()
 
     assert "SELECT" in sql
     assert "*" in sql
     assert People.table_name_full() in sql
 
     query = query.select("nameFirst", "nameLast")
-    sql = query.build_query()[0]
+    sql = query.build_query()
 
     assert "nameFirst" in sql
     assert "nameLast" in sql
@@ -33,7 +33,7 @@ def test_select():
 def test_select_from_subquery():
     query = Query(AllstarAppearances.select()).select("playerID")
 
-    assert query.build_query()[0].count("SELECT") == 2
+    assert query.build_query().count("SELECT") == 2
     assert len(query.execute()) > 0
 
 def test_where():
@@ -42,11 +42,11 @@ def test_where():
     # Empty select
     query = query.select().where(nameFirst="Grover")
     # Extract the query
-    sql, params = query.build_query()
+    sql = query.build_query()
 
     assert "WHERE" in sql
     assert "nameFirst" in sql
-    assert "Grover" in params
+    assert "Grover" in sql
 
 def test_order_by():
     query = Query(People)
@@ -54,7 +54,7 @@ def test_order_by():
     # Empty select
     query = query.select().order_by(nameFirst="ASC")
     # Extract the query
-    sql = query.build_query()[0]
+    sql = query.build_query()
 
     assert "ORDER BY" in sql
     assert "nameFirst" in sql
@@ -66,7 +66,7 @@ def test_limit():
     # Empty select
     query = query.select().limit(10)
     # Extract the query
-    sql = query.build_query()[0]
+    sql = query.build_query()
 
     assert "TOP (10)" in sql
 
@@ -76,7 +76,7 @@ def test_join():
     # Empty select
     query = query.select().join(AllstarAppearances, "playerID")
     # Extract the query
-    sql = query.build_query()[0]
+    sql = query.build_query()
 
     assert "JOIN" in sql
     assert People.table_name_full() in sql
@@ -92,7 +92,7 @@ def test_group_by():
     # Empty select
     query = query.select().group_by("playerID")
     # Extract the query
-    sql = query.build_query()[0]
+    sql = query.build_query()
 
     assert "playerID FROM" in sql
     assert "GROUP BY playerID" in sql
@@ -103,7 +103,7 @@ def test_aggregate():
     # Empty select
     query = query.select().aggregate(count=[{"player": "*"}])
     # Extract the query
-    sql = query.build_query()[0]
+    sql = query.build_query()
 
     assert "COUNT(*)" in sql
     assert "AS player" in sql

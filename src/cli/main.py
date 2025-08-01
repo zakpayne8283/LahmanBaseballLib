@@ -19,12 +19,8 @@ def run_cli():
     #
     ###
 
-    sub_query = AllstarAppearances.select()
-
-    results = Query(AllstarAppearances.select()).select("playerID")
-
-    for player in results.execute():
-        print(player.playerID)
+    for player in AllstarAppearances.select().aggregate(count=[{"playerCount":"*"}]).group_by("yearID").order_by(yearID="DESC").execute():
+        print(player)
 
 
 
