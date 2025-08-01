@@ -6,6 +6,7 @@ import sys
 # My Modules
 from db.models.AllstarApperances import AllstarAppearances
 from db.models.People import People
+from db.models.query_builder import Query
 from charts import allstar_charts
 
 def run_cli():
@@ -18,7 +19,12 @@ def run_cli():
     #
     ###
 
-    allstar_charts.top_ten_allstar_subs()
+    sub_query = AllstarAppearances.select()
+
+    results = Query(AllstarAppearances.select()).select("playerID")
+
+    for player in results.execute():
+        print(player.playerID)
 
 
 

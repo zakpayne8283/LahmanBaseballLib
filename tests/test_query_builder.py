@@ -30,6 +30,12 @@ def test_select():
     assert "nameFirst" in sql
     assert "nameLast" in sql
 
+def test_select_from_subquery():
+    query = Query(AllstarAppearances.select()).select("playerID")
+
+    assert query.build_query()[0].count("SELECT") == 2
+    assert len(query.execute()) > 0
+
 def test_where():
     query = Query(People)
 

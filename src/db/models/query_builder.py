@@ -2,12 +2,18 @@ from types import SimpleNamespace
 
 # Query class used in the base_table class to better structure SQL queries
 class Query:
+    # To build out sub-queries, I'll need to do the following:
+    # - make it so table_class can take a None
+    #   - This is so that we could theoretically do something like SELECT * FROM (SELECT [...])
+    # - add a HAVING statement, which can also take Query() objects
+    # - allow for WHERE clauses to take Query() objects
+    # Maybe more but let's just see what happens
 
     # Constructor
     #   table_class is the parent class for this query
-    def __init__(self, table_class):
-        # Base table the query is being made on
-        self.table_class = table_class
+    def __init__(self, from_table):
+        # Base table or query the query is being made on (FROM)
+        self.from_table = from_table
 
         # Aggregation functions to run
         self.aggregations = {}
@@ -40,8 +46,8 @@ class Query:
 
     # Where filter
     #   translates to SQL's `WHERE X = Y` later
-    #   TODO: update this to take other comparison operators
-    #   Expects **_fitlers as column=value (e.g.) .where(nameFirst="Alex")
+    #   Expects **_wheres as column=value (e.g.) .where(nameFirst="Alex")
+    #   Also accepts comparison values: column__op=value (e.g.) .where(yearID__gt=1980) --> yearID > 1980
     def where(self, **_wheres):
         self.wheres.update(_wheres)
         return self
@@ -91,6 +97,11 @@ class Query:
     #   Builds the SQL query and returns it as a string, plus any where parameters
     #   TODO: Might be nice to break this into multiple methods for clarity?
     def build_query(self):
+        
+        # Build the FROM string
+        # TODO: Handle potential recursive subqueries and their namings - they can't all be named temp
+        from_string = f"({self.from_table.build_query()[0]}) AS temp" if isinstance(self.from_table, Query) else self.from_table.table_name_full()
+
         # Limit string
         limit_string = f" TOP ({self._limit})" if self._limit is not None else ""
 
@@ -113,18 +124,19 @@ class Query:
             query_columns += ", " + ",".join(agg_statements)
 
         # Setup base SQL select
-        sql = f"SELECT {limit_string} {query_columns} FROM {self.table_class.table_name_full()}"
+        sql = f"SELECT {limit_string} {query_columns} FROM {from_string}"
 
         # Join tables, as needed
         if self.joins:
             #TODO: Support more than one join here
             join_statements = []
             for table, column in self.joins.items():
-                join_statements.append(f" JOIN {table} ON {self.table_class.table_name_full()}.{column} = {table}.{column}")
+                join_statements.append(f" JOIN {table} ON {self.from_table.table_name_full()}.{column} = {table}.{column}")
             
             sql += "".join(join_statements)
 
         # Build the where conditions in the SQL query
+        # TODO: Rework this to just specify the WHERE statements inline, for subqueries to work right
         params = []
         if self.wheres:
             conditions = []
@@ -132,7 +144,7 @@ class Query:
             for col, val in self.wheres.items():
 
                 # Setup the base clause
-                where_string = f"{self.table_class.table_name_full()}."
+                where_string = f"{self.from_table.table_name_full()}."
 
                 # If __ is present in the column, apply an operator other than "=" to it
                 if "__" in col:
@@ -175,11 +187,13 @@ class Query:
     # Executes the query
     def execute(self):
         # Get the cursor from parent class
-        cursor = self.table_class.get_cursor()
+        from db.models.base_table import TableBase
+        cursor = TableBase.get_cursor()
 
         # Get the SQL and parameters
         sql, params = self.build_query()
 
+        print("Running SQL query: ")
         print(sql)
 
         # Execute the query
@@ -204,7 +218,7 @@ class Query:
         for row in rows:
             # Pack the data, create a new object, and store it
             data = dict(zip(columns, row))
-            instance = self.table_class(**data) if results_as_instance is True else SimpleNamespace(**data)
+            instance = self.from_table(**data) if results_as_instance is True else SimpleNamespace(**data)
             results.append(instance)
 
         # Return the list of data
