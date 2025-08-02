@@ -42,6 +42,7 @@ class Query:
         self.columns.extend(columns)
         return self
     
+    # Build the WHERE of where data is coming from
     def _build_from_query(self):
         # TODO: Handle potential recursive subqueries and their namings - they can't all be named temp
         # If the FROM table is a query, we need to recursively generate that query too.
@@ -75,24 +76,32 @@ class Query:
             where_clauses = []
             # Loop through each WHERE clause
             for col, val in self.wheres.items():
-                # Setup the base clause
-                # TODO: Modify this to work with JOINs (e.g. where a.year > 1900 AND b.year < 2000)
-                where_string = f"{self.from_table.table_name_full()}."
+                where_string = ""
 
-                # If __ is present in the column, apply an operator other than "=" to it
-                if "__" in col:
-                    # Get the name and operation
-                    col_name, op = col.split("__")
-                    # Get the specific operation
-                    sql_op = {"gt": ">", "gte": ">=", "lt": "<", "lte": "<=", "ne": "!=", "like": "LIKE", "in": "IN"}[op]
-                    # Finish the clause
-                    # TODO Probably want some sort of check for val here at some point
-                    where_string += f"{col_name} {sql_op} {str(val)}"
-                elif val == None:
-                    where_string += f"{col} IS NULL"
+                if isinstance(val, Query):
+                    # The WHERE value is a query, and needs to be built
+                    where_string = f"{col} IN ({val.build_query()})"
                 else:
-                    # Just give a basic where clause
-                    where_string += f"{col} = '{str(val)}'"
+                    # The WHERE value is NOT a query, proceed as usual
+
+                    # Setup the base clause
+                    # TODO: Modify this to work with JOINs (e.g. where a.year > 1900 AND b.year < 2000)
+                    where_string = f"{self.from_table.table_name_full()}."
+
+                    # If __ is present in the column, apply an operator other than "=" to it
+                    if "__" in col:
+                        # Get the name and operation
+                        col_name, op = col.split("__")
+                        # Get the specific operation
+                        sql_op = {"gt": ">", "gte": ">=", "lt": "<", "lte": "<=", "ne": "!=", "like": "LIKE", "in": "IN"}[op]
+                        # Finish the clause
+                        # TODO Probably want some sort of check for val here at some point
+                        where_string += f"{col_name} {sql_op} {str(val)}"
+                    elif val == None:
+                        where_string += f"{col} IS NULL"
+                    else:
+                        # Just give a basic where clause
+                        where_string += f"{col} = '{str(val)}'"
 
                 # Add the finished clause to our list
                 where_clauses.append(where_string)

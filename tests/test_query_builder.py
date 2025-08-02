@@ -48,6 +48,12 @@ def test_where():
     assert "nameFirst" in sql
     assert "Grover" in sql
 
+def test_where_subquery():
+    query = People.select("playerID", "nameFirst", "nameLast").where(playerID=AllstarAppearances.select("playerID").where(yearID=2024))
+    results = query.execute()
+
+    assert len(results) > 0
+
 def test_order_by():
     query = Query(People)
 

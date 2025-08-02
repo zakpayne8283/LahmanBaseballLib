@@ -18,9 +18,10 @@ def run_cli():
     # Testing queries below
     #
     ###
+    query = People.select("playerID", "nameFirst", "nameLast").where(playerID=AllstarAppearances.select("playerID").where(yearID=2024))
 
-    for player in AllstarAppearances.select().aggregate(count=[{"playerCount":"*"}]).group_by("yearID").order_by(yearID="DESC").execute():
-        print(player)
+    for player in query.execute():
+        print(player.nameFirst + " " + player.nameLast)
 
 
 
