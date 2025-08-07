@@ -4,8 +4,8 @@ from types import SimpleNamespace
 class Query:
     # To build out sub-queries, I'll need to do the following:
     # - add a HAVING statement, which can also take Query() objects
-    # - allow for WHERE clauses to take Query() objects
-    # Maybe more but let's just see what happens
+    # - Modify SELECT to accept subqueries
+    # TODO: Add correlated subqueries 
 
     # Constructor
     #   table_class is the parent class for this query
@@ -24,6 +24,10 @@ class Query:
 
         # The field(s) that will be grouped at the end
         self.groupings = []
+
+        # The having to tack on at the end
+        # TODO: Make this able to cover more than just the last GROUP BY
+        self.havings = {}
 
         # Tables to join on in the query
         self.joins = {}
@@ -55,7 +59,8 @@ class Query:
     def _build_columns_query(self):
         # Specifiy the columns we're selecting
         # Right now just do all
-        # TODO: Maybe find a way this works a bit better, especially for joins
+        # TODO: Maybe find a way this works a bit better, especially for joins - namely that you can do a join column here
+        #   Although it might not be bad to specify the actual columns by specific table, like SQL likes...
         # TODO: Right now I would have to specify the column names in full and that's a hassle
         if self.columns:
             return f" {",".join(self.columns)} "
@@ -206,6 +211,31 @@ class Query:
         else:
             return ""
 
+    # Having
+    #   Conditions on GROUP BY statements
+    #   (e.g.) SELECT yearID, COUNT(*) FROM dbo.Allstars GROUP BY yearID HAVING COUNT(*) > 10 would return all ASGs with more than 10 players
+    def having(self, **havings):
+        self.havings.update(havings)
+        return self
+
+    # Build having statements
+    def _build_having_query(self):
+        # Add the having query as needed
+        # for each key in self.havings, generate SQL for the given aggreagte function, matching the parameters
+        # e.g {'count': [{'>': '10'}]} ==> COUNT (*) > 10
+        if self.havings:
+            having_statements = []
+            for aggregator, qualifier in self.havings.items():
+                print(aggregator)
+                print(qualifier)
+                for having_set in qualifier:
+                    for operator, value in having_set.items():
+                        having_statements.append(f"{aggregator.upper()}(*) {operator} {value}")
+            
+            return " HAVING " + "AND".join(having_statements)
+        else:
+            return ""
+
     # Build SQL query
     #   Builds the SQL query and returns it as a string, plus any where parameters
     #   TODO: Might be nice to break this into multiple methods for clarity?
@@ -237,6 +267,9 @@ class Query:
 
         # Build any ORDER BY statements
         sql += self._build_orderby_query()
+
+        # Build any HAVING statements
+        sql += self._build_having_query()
 
         return sql
 

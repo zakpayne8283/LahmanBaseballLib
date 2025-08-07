@@ -9,7 +9,7 @@ def test_init():
     query = Query(People)
 
     assert isinstance(query, Query)
-    assert len(vars((query))) == 8      # Check number of members
+    assert len(vars((query))) == 9      # Check number of members
 
 # Test for most basic SELECT statement possible
 def test_select():
@@ -113,3 +113,19 @@ def test_aggregate():
 
     assert "COUNT(*)" in sql
     assert "AS player" in sql
+
+def test_having():
+    # Query: Allstars with 20 or more appearances
+    query = (People.select(f"{People.table_name_full()}.playerID", "nameFirst", "nameLast")
+                   .aggregate(count=[{"allstar_appearances": "*"}])
+                   .join(AllstarAppearances, "playerID")
+                   .group_by(f"{People.table_name_full()}.playerID", "nameFirst", "nameLast")
+                   .having(count=[{">": 20}]))
+    # Generate SQL strings
+    raw_sql = query.build_query()
+    # String should have the having statement
+    assert "HAVING COUNT(*) > 20" in raw_sql
+    # Execute Results
+    results = query.execute()
+    # Currently there are only 3 players with more than 20 appearances (unlikely to change...)
+    assert len(results) == 3
