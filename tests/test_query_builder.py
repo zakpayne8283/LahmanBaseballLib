@@ -9,7 +9,8 @@ def test_init():
     query = Query(People)
 
     assert isinstance(query, Query)
-    assert len(vars((query))) == 9      # Check number of members
+    assert len(vars((query))) == 11      # Check number of members
+    # This test is more about being mindful for modifying the core Query class
 
 # Test for most basic SELECT statement possible
 def test_select():
@@ -31,10 +32,14 @@ def test_select():
     assert "nameLast" in sql
 
 def test_select_from_subquery():
-    query = Query(AllstarAppearances.select()).select("playerID")
+    query = Query(AllstarAppearances.select().as_name("allstars")).select("playerID")
 
-    assert query.build_query().count("SELECT") == 2
+    raw_sql = query.build_query()
+
+    assert raw_sql.count("SELECT") == 2
     assert len(query.execute()) > 0
+
+    assert raw_sql.count("AS") == 1
 
 def test_where():
     query = Query(People)
@@ -129,3 +134,34 @@ def test_having():
     results = query.execute()
     # Currently there are only 3 players with more than 20 appearances (unlikely to change...)
     assert len(results) == 3
+
+    # Test for a HAVING statement being a query
+    outer_table_alias = "ASGLeaders"
+    query_num_allstars_by_team_by_year = AllstarAppearances.select("teamID").aggregate(count=[{"player_count": "*"}]).where(yearID__var=f"{outer_table_alias}.yearID").group_by("teamID").as_name("teamAllstarAppearancesByYear")
+    query_max_asg_players_each_year = Query(query_num_allstars_by_team_by_year).aggregate(max=[{"most_players":"teamAllstarAppearancesByYear.player_count"}])
+    query_team_with_most_allstars_by_year = AllstarAppearances.select("yearID", "teamID").aggregate(count=[{"player_count": "*"}]).alias(outer_table_alias).group_by("yearID", "teamID").having(count=[{"=": query_max_asg_players_each_year}])
+    
+    # TODO: Maybe fix this test up, we're just making sure it outputs results right now...
+    assert len(query_team_with_most_allstars_by_year.execute()) > 0
+
+def test_alias():
+    table_alias = "needlesslyLongName"
+    # Make query
+    query = People.select().where(nameFirst="Elly").alias(table_alias)
+
+    # Generate SQL
+    raw_sql = query.build_query()
+
+    # query should have needlesslyLongName as the table alias
+    assert table_alias in raw_sql
+
+    # Execute Results
+    results = query.execute()
+
+    # Make sure the WHERE Statement Works
+    assert len(results) == 1
+
+    # Testing a JOIN here
+    query = People.select().alias("playerList").where(nameFirst="Elly").join(AllstarAppearances, "playerID")
+    results = query.execute()
+    assert len(results) == 1

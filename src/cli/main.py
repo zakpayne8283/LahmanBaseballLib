@@ -18,6 +18,13 @@ def run_cli():
     # Testing queries below
     #
     ###
+    query2 = Query(People)
+
+    # Empty select
+    query2 = query2.select().join(AllstarAppearances, "playerID")
+
+    print(query2.build_query())
+
     query = (People.select(f"{People.table_name_full()}.playerID", "nameFirst", "nameLast")
                    .aggregate(count=[{"allstar_appearances": "*"}])
                    .join(AllstarAppearances, "playerID")

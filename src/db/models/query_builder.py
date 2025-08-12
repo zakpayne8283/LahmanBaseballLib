@@ -38,6 +38,12 @@ class Query:
         # Which fields to order by
         self.orders = {}
 
+        # Optionally set an "AS" name for a subquery
+        self.query_name = None
+
+        # Optionally enable a table alias for queries
+        self.table_alias = None
+
     # Select statement
     #   chooses which columns to display from the parent table
     #   TODO: Update this to accept columns from joined tables?
@@ -46,14 +52,29 @@ class Query:
         self.columns.extend(columns)
         return self
     
+    # AS statement
+    #   Takes a string and set it as the self.query_name value
+    #   This is so parent queries can reference this query
+    def as_name(self, name):
+        self.query_name = name
+        return self
+    
+    # Table Alias
+    #   Takes a string and uses it as an alias for the current table being used
+    def alias(self, alias_name):
+        self.table_alias = alias_name
+        return self
+
     # Build the WHERE of where data is coming from
     def _build_from_query(self):
-        # TODO: Handle potential recursive subqueries and their namings - they can't all be named temp
         # If the FROM table is a query, we need to recursively generate that query too.
         if isinstance(self.from_table, Query):
-            return f"FROM ({self.from_table.build_query()}) AS temp"
+            #TODO: Refactor so this has just one return
+            as_query = f" AS {self.from_table.query_name}" if self.from_table.query_name is not None else ""
+            return f"FROM ({self.from_table.build_query()}){as_query}"
         else:
-            return f"FROM {self.from_table.table_name_full()}"
+            alias_string = f" {self.table_alias} " if self.table_alias is not None else ""
+            return f"FROM {self.from_table.table_name_full()}{alias_string}"
 
     # Build columns that are being selected
     def _build_columns_query(self):
@@ -64,6 +85,9 @@ class Query:
         # TODO: Right now I would have to specify the column names in full and that's a hassle
         if self.columns:
             return f" {",".join(self.columns)} "
+        elif self.aggregations:
+            # On no columns and aggregations, only include the aggregations
+            return " "
         else:
             return " * "
 
@@ -91,17 +115,29 @@ class Query:
 
                     # Setup the base clause
                     # TODO: Modify this to work with JOINs (e.g. where a.year > 1900 AND b.year < 2000)
-                    where_string = f"{self.from_table.table_name_full()}."
-
+                    where_string = f"{self._table_name()}."
                     # If __ is present in the column, apply an operator other than "=" to it
                     if "__" in col:
                         # Get the name and operation
-                        col_name, op = col.split("__")
+                        column_options = col.split("__")
+
+                        # Extract the name, should always be the first, removing from list
+                        col_name = column_options.pop(0)
+
                         # Get the specific operation
-                        sql_op = {"gt": ">", "gte": ">=", "lt": "<", "lte": "<=", "ne": "!=", "like": "LIKE", "in": "IN"}[op]
+                        # Code mappings
+                        sql_op_codes = {"gt": ">", "gte": ">=", "lt": "<", "lte": "<=", "ne": "!=", "like": "LIKE", "in": "IN"}
+                        # Get the operation, if we find it
+                        sql_op = [sql_op_codes[code] for code in sql_op_codes if code in column_options]
+                        # If we don't find it, just make it equals
+                        sql_op = "=" if sql_op == [] else sql_op[0]
+
+                        # Get if the WHERE value should be treated as a variable
+                        is_var = "var" in column_options
+
                         # Finish the clause
                         # TODO Probably want some sort of check for val here at some point
-                        where_string += f"{col_name} {sql_op} {str(val)}"
+                        where_string += f"{col_name} {sql_op} {str(val) if is_var is False else val}"
                     elif val == None:
                         where_string += f"{col} IS NULL"
                     else:
@@ -162,7 +198,8 @@ class Query:
             #TODO: Support more than one join here, specifically the ON statement
             join_statements = []
             for table, column in self.joins.items():
-                join_statements.append(f" JOIN {table} ON {self.from_table.table_name_full()}.{column} = {table}.{column}")
+                this_table_and_column = f"{self._table_name()}.{column}"
+                join_statements.append(f" JOIN {table} ON {this_table_and_column} = {table}.{column}")
             
             return "".join(join_statements)
         else:
@@ -225,11 +262,17 @@ class Query:
         # e.g {'count': [{'>': '10'}]} ==> COUNT (*) > 10
         if self.havings:
             having_statements = []
+            # for each HAVING qualifer ('count': [{'>': '10'}])
             for aggregator, qualifier in self.havings.items():
-                print(aggregator)
-                print(qualifier)
+                # For each of the havings we're checking in it [{'>': '10'}, {...}, ...]
                 for having_set in qualifier:
+                    # Get the operator ('>') and the value (10) and build the available HAVING statements
                     for operator, value in having_set.items():
+                        # If the provided value is a query, build it first
+                        if isinstance(value, Query):
+                            as_statement = f" AS {value.query_name}" if value.query_name is not None else ""
+                            value = f"({value.build_query()}){as_statement}"
+                        # Append the new statement
                         having_statements.append(f"{aggregator.upper()}(*) {operator} {value}")
             
             return " HAVING " + "AND".join(having_statements)
@@ -299,7 +342,7 @@ class Query:
 
         # Results should only be an instance if we're selecting the full data
         # TODO: Maybe there's a way to still return the whole objects?
-        results_as_instance = False if self.joins or self.columns or self.aggregations else True
+        results_as_instance = False if self.joins or self.columns or self.aggregations or isinstance(self.from_table, Query) else True
 
         # Return instances of the subclass, with attributes set
         results = []
@@ -313,3 +356,9 @@ class Query:
 
         # Return the list of data
         return results
+    
+    def _table_name(self):
+        if self.table_alias:
+            return self.table_alias
+        
+        return self.from_table.table_name_full()
