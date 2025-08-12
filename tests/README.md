@@ -20,8 +20,8 @@ src\db\connector.py                      7      0   100%
 src\db\models\AllstarApperances.py      19      0   100%
 src\db\models\People.py                 45      0   100%
 src\db\models\base_table.py             26      0   100%
-src\db\models\query_builder.py         161      3    98%   335-337
+src\db\models\query_builder.py         161      3    98%   336-338
 ------------------------------------------------------------------
 TOTAL                                  258      3    99%
-============================= 28 passed in 0.42s ==============================
+============================= 28 passed in 0.46s ==============================
 ```

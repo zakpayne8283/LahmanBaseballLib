@@ -80,8 +80,9 @@ class Query:
     def _build_columns_query(self):
         # Specifiy the columns we're selecting
         # Right now just do all
-        # TODO: Maybe find a way this works a bit better, especially for joins - namely that you can do a join column here
-        #   Although it might not be bad to specify the actual columns by specific table, like SQL likes...
+        # TODO:
+        #   Maybe find a way this works a bit better, especially for joins - namely that you can do a join column here
+        #   This also presents issues when doing a JOIN because common fields (e.g. playerID) are ambiguous during selection
         # TODO: Right now I would have to specify the column names in full and that's a hassle
         if self.columns:
             return f" {",".join(self.columns)} "

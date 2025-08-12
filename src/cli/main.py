@@ -18,21 +18,7 @@ def run_cli():
     # Testing queries below
     #
     ###
-    query2 = Query(People)
-
-    # Empty select
-    query2 = query2.select().join(AllstarAppearances, "playerID")
-
-    print(query2.build_query())
-
-    query = (People.select(f"{People.table_name_full()}.playerID", "nameFirst", "nameLast")
-                   .aggregate(count=[{"allstar_appearances": "*"}])
-                   .join(AllstarAppearances, "playerID")
-                   .group_by(f"{People.table_name_full()}.playerID", "nameFirst", "nameLast")
-                   .having(count=[{">": 20}]))
-
-    for player in query.execute():
-        print(f"{player.nameFirst} {player.nameLast} -- {player.allstar_appearances}")
+    allstar_charts.career_length_vs_allstar_appearances()
 
 
 

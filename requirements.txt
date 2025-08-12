@@ -1,4 +1,5 @@
 matplotlib
+mplcursors
 numpy
 pyodbc
 pytest
