@@ -1,4 +1,23 @@
-from cli.main import run_cli
+# Native libraries
+import argparse
+import os
+import sys
 
-if __name__ == "__main__":
+# My Modules
+from charts import allstar_charts
+
+def run_cli():
+    
+    print("Starting main function...")
+
+    ###
+    #
+    # Testing queries below
+    #
+    ###
+    # allstar_charts.career_length_vs_allstar_appearances()
+    allstar_charts.career_length_vs_allstar_appearances()
+
+
+if __name__ == '__main__':
     run_cli()

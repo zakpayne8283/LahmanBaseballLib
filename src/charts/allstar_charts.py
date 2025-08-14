@@ -3,11 +3,19 @@ import matplotlib.pyplot as plt
 import mplcursors
 import numpy as np
 
+# Data APIs
+from api import allstars_api
+
+# DB Models
 from db.models.People import People
 from db.models.AllstarApperances import AllstarAppearances
 
-def top_ten_allstars():
-    results = People.allstar_apperances(limit=10)
+def top_n_allstars(limit: int = 10):
+    """
+    Provides the top N allstars, by number of appearances.
+    Displays as a bar chart
+    """
+    results = allstars_api.top_n_appearances(limit)
 
     # Seperate out lists of players and appearances
     names = [f"{player.nameFirst} {player.nameLast}" for player in results]
@@ -27,8 +35,13 @@ def top_ten_allstars():
     plt.tight_layout()
     plt.show()
 
-def top_ten_allstar_subs():
-    results = AllstarAppearances.most_non_starting_appearances()
+def top_n_allstar_subs(limit: int = 10):
+    """
+    Provides the top N allstars, by number of subsitute appearances.
+    Displays as a bar chart.
+    """
+
+    results = allstars_api.top_n_sub_appearances(limit)
 
     # Seperate out lists of players and appearances
     names = [f"{player.nameFirst} {player.nameLast}" for player in results]
@@ -49,22 +62,12 @@ def top_ten_allstar_subs():
     plt.show()
 
 def career_length_vs_allstar_appearances():
+    """
+    Displays a scatterplot of career length in years (X-axis) vs. number of allstar appearances (Y-axis).
+    """
     # Establish our query:
     #   Get all players' IDs, start/end dates, and number of allstar appearances
-    """
-    SELECT People.playerID, debut, finalGame, COUNT(*) AS allstar_appearances
-    FROM People
-    JOIN AllstarFull ON People.playerID = AllstarFull.playerID
-    GROUP BY People.playerID, debut, finalGame
-    """
-    results = (People.select(f"{People.table_name_full()}.playerID", "nameFirst", "nameLast", "debut", "finalGame")
-                     .aggregate(count=[{"allstar_appearances": "*"}])
-                     .join(AllstarAppearances, "playerID")
-                     .group_by(f"{People.table_name_full()}.playerID", "nameFirst", "nameLast", "debut", "finalGame"))
-    
-    # Establish each career length for each number of allstar_appearances
-    # Each Key is {num_appearances: [{ career_length: int, still_active: bool }, {...}, ...]}
-    allstar_appearances_career_lengths = {}
+    results = allstars_api.allstars_career_debuts_and_finales()
 
     # Lists to hold the plot values
     x_vals = []
@@ -76,7 +79,7 @@ def career_length_vs_allstar_appearances():
     color_map = {True: "orange", False: "blue"}
 
     # Get the results
-    for player in results.execute():
+    for player in results:
 
         # Build the information for the player:
         allstar_information = {}

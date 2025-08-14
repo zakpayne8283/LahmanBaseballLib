@@ -38,7 +38,6 @@ class TableBase:
         return cls.table_name_full() + "." + column_name
 
     # Static method for making select statements
-    # TODO: Move **fitlers out to a where() function and replace it with columns to select
     @classmethod
     def select(cls, *columns):
         cls._query = Query(cls).select(*columns)

@@ -31,14 +31,15 @@ def test_birth_date():
     assert len(player) == 1
     assert player[0].birth_date() == "2/5/1934"
 
-def test_allstar_apperances():
+# TODO: Move these? These might just be good to move to the allstar API tests.
+# def test_allstar_apperances():
 
-    as_apperances = People.allstar_apperances()
-    assert len(as_apperances) == 2017 #TODO: Keep an eye on this, subject to change
+#     as_apperances = People.allstar_apperances()
+#     assert len(as_apperances) == 2017 #TODO: Keep an eye on this, subject to change
 
-    as_apperances = People.allstar_apperances(limit=10)
-    assert len(as_apperances) == 10
+#     as_apperances = People.allstar_apperances(limit=10)
+#     assert len(as_apperances) == 10
 
-    as_apperances = People.allstar_apperances(player_id="aaronha01")
-    assert len(as_apperances) == 1
+#     as_apperances = People.allstar_apperances(player_id="aaronha01")
+#     assert len(as_apperances) == 1
 
