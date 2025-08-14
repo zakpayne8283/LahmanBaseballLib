@@ -124,3 +124,64 @@ def career_length_vs_allstar_appearances():
         sel.annotation.set_text(names[idx])
 
     plt.show()
+
+def overlapping_multi_time_allstars(min_number_appearances: int = 10):
+    """
+    Displays a horizontal bar chart of all players with N allstar appearances, ordered by debut of first game.
+    X-axis is the year, Y-axis is players, ordered ascending by their debut game.
+    """
+    # Establish our query:
+    #   Get all players' IDs, start/end dates, and number of allstar appearances
+    results = allstars_api.allstars_career_debuts_and_finales()
+
+    # Filter our results to only players with N or more appearances
+    filtered_sorted_results = sorted([player for player in results if player.allstar_appearances >= min_number_appearances], key=lambda p: p.debut, reverse=True)
+
+    # Now build the chart data
+    names = []
+    debuts = []
+    durations = []
+    appearances = []
+
+    for player in filtered_sorted_results:
+        names.append(f"{player.nameFirst} {player.nameLast}")
+
+        debut = datetime.strptime(player.debut, "%Y-%m-%d").date()
+        # Set final date if the player is no longer playing
+        if player.finalGame is not None:
+            finale = datetime.strptime(player.finalGame, "%Y-%m-%d").date()
+        else:
+            finale = date.today()
+
+        debuts.append(debut)
+        durations.append((finale - debut).days)
+        appearances.append(player.allstar_appearances)
+
+    # Create figure
+    fig, ax = plt.subplots()
+
+    # Plot bars
+    bars = ax.barh(names, durations, left=debuts, height=0.5)
+
+    # Format x-axis as dates
+    ax.xaxis_date()
+
+    # Labels
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Player")
+    ax.set_title("Career Timelines")
+
+    # Add mplcursors tooltips
+    cursor = mplcursors.cursor(bars, hover=True)
+
+    @cursor.connect("add")
+    def on_add(sel):
+        idx = sel.index
+        player = filtered_sorted_results[idx]
+        sel.annotation.set_text(
+            f"{player.nameFirst} {player.nameLast}\nAllstar Appearances: {player.allstar_appearances}\nDebut: {player.debut}\nFinale: {player.finalGame}"
+        )
+        sel.annotation.get_bbox_patch().set(alpha=0.8, facecolor="lightyellow")
+
+    plt.tight_layout()
+    plt.show()
