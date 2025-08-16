@@ -16,7 +16,7 @@ def run_cli():
     #
     ###
     # allstar_charts.career_length_vs_allstar_appearances()
-    allstar_charts.allstar_appearances_per_opportunity()
+    allstar_charts.age_of_starting_position_by_year(8)
 
 
 if __name__ == '__main__':

@@ -239,3 +239,71 @@ def allstar_appearances_per_opportunity():
         sel.annotation.set_text(allstar_players[idx])
 
     plt.show()
+
+def age_of_starting_position_by_year(position=1):
+    """
+    Shows, as a line chart, the age of the starting player at a position each year of the Allstar Game
+    """
+    results = allstars_api.allstars_starters_information(position)
+
+    allstar_players = []
+    game_dates = []
+    game_years = []
+    players_leagues = []
+    ages_of_starters = []
+
+    # Map True/False to colors
+    league_colors = {"AL": "red", "NL": "blue"}
+
+    for starter in results:
+        # Store the player name
+        allstar_players.append(f"{starter.nameFirst} {starter.nameLast}")
+
+        # Store when the game happened
+        game_date = _parse_asg_date_from_id(starter.gameID)
+        game_years.append(starter.yearID)
+        game_dates.append(game_date)
+
+        # Calculate the age of the starter that game
+        starter_age = (game_date - date(starter.birthYear, starter.birthMonth, starter.birthDay)).days
+        ages_of_starters.append(round(starter_age / 365.25, 1))
+
+        players_leagues.append(league_colors[starter.lgID])
+
+    # Create scatter plot
+    # X Axis - Game Dates
+    # Y Axis - Age of the starter that game for the position
+    scatter = plt.scatter(game_dates, ages_of_starters, c=players_leagues, edgecolor="black")
+
+    # Labels and title
+    plt.xlabel("ASG Date")
+    plt.ylabel("Age of Starter")
+    plt.title(f"Age of Position {position} ASG Starter")
+    plt.grid(True)
+
+    # Add hover tooltips
+    cursor = mplcursors.cursor(scatter, hover=True)
+    @cursor.connect("add")
+    def on_hover(sel):
+        idx = sel.index
+        sel.annotation.set_text(f"{allstar_players[idx]}\nYear: {game_years[idx]}\nAge: {ages_of_starters[idx]}")
+
+    plt.show()
+
+
+
+def _parse_asg_date_from_id(asg_id: str):
+    """
+    Given the game id for an allstar game (AllstarFull.gameID), return the date the game was played
+    """
+
+    """
+    NLS199007100
+    NLS194707080
+    """
+
+    year = int(asg_id[3:7])
+    month = int(asg_id[7:9])
+    day = int(asg_id[9:11])
+
+    return date(year, month, day)

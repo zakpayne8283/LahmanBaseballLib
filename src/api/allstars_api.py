@@ -64,3 +64,33 @@ def allstars_career_debuts_and_finales(include_as_game_id=False):
                           .group_by(*columns)
                           .execute())
     return results
+
+# TODO: Identify Query Options
+def allstars_starters_information(starting_position=1):
+    """
+    Returns all People information, plus basic ASG info for all starting players for each game.
+    """
+    from db.models.People import People
+
+    """
+    SELECT allstars.gameID, allstars.gameNum, allstars.startingPos, p.*
+    FROM AllstarFull allstars JOIN People p ON allstars.playerID = p.playerID
+    WHERE startingPos IS NOT NULL
+    """
+
+    columns = [
+        "yearID",
+        "lgID",
+        "gameID",
+        "gameNum",
+        "startingPos",
+        People.column("*")
+    ]
+
+    results = (
+        AllstarAppearances.select(*columns)
+                          .join(People, "playerID")
+                          .where(startingPos=starting_position)
+                          .execute())
+    
+    return results
