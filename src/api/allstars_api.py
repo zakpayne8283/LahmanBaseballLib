@@ -42,7 +42,7 @@ def top_n_sub_appearances(limit: int = 10):
     return results
 
 # TODO: Identify query options
-def allstars_career_debuts_and_finales():
+def allstars_career_debuts_and_finales(include_as_game_id=False):
     """
     Returns a list of Allstars (by ID) and their first/last names, debuts, final games, and number of appearances
     """

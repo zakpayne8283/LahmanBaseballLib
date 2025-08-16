@@ -185,3 +185,57 @@ def overlapping_multi_time_allstars(min_number_appearances: int = 10):
 
     plt.tight_layout()
     plt.show()
+
+def allstar_appearances_per_opportunity():
+    """
+    Shows the total number of allstar appearances a player has had relative to the number of opportunities they've had
+    Opportunities are occasions where the player was eligable, and had played sufficient games played to be considered
+    """
+    # TODO: Work on baseline sufficient games
+
+    # Establish our query:
+    #   Get all players' IDs, names, start/end dates, and number of allstar appearances
+    results = allstars_api.allstars_career_debuts_and_finales(include_as_game_id=True)
+
+    allstar_players = []
+    career_lengths = []
+    allstar_appearances_per_year = []
+
+    for player in results:
+        # Store the player name
+        allstar_players.append(f"{player.nameFirst} {player.nameLast}")
+        
+        # Establish the player's career length
+        debut = datetime.strptime(player.debut, "%Y-%m-%d").date()
+        # Set final date if the player is no longer playing
+        if player.finalGame is not None:
+            finale = datetime.strptime(player.finalGame, "%Y-%m-%d").date()
+        else:
+            finale = datetime.strptime('2024-12-31', "%Y-%m-%d").date()
+
+        # Calculate career length, in total years
+        # TODO: Modify this to seasons played - Minnie Minoso throws this off...
+        #       Use the Appearances table to do it 
+        career_length = ((finale - debut).days) / 365.25
+        career_lengths.append(career_length)
+
+        # Get the total appearances per year played, rounded to 2 decimals
+        allstar_appearances_per_year.append(round(player.allstar_appearances / career_length, 2))
+
+    # Create scatter plot
+    scatter = plt.scatter(career_lengths, allstar_appearances_per_year, edgecolor="black")
+
+    # Labels and title
+    plt.xlabel("Seasons Played")
+    plt.ylabel("Appearances per Year")
+    plt.title("ASGs per Years Played")
+    plt.grid(True)
+
+    # Add hover tooltips
+    cursor = mplcursors.cursor(scatter, hover=True)
+    @cursor.connect("add")
+    def on_hover(sel):
+        idx = sel.index
+        sel.annotation.set_text(allstar_players[idx])
+
+    plt.show()

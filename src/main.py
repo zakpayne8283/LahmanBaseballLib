@@ -16,7 +16,7 @@ def run_cli():
     #
     ###
     # allstar_charts.career_length_vs_allstar_appearances()
-    allstar_charts.overlapping_multi_time_allstars(15)
+    allstar_charts.allstar_appearances_per_opportunity()
 
 
 if __name__ == '__main__':
