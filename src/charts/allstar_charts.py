@@ -4,11 +4,11 @@ import mplcursors
 import numpy as np
 
 # Data APIs
-from api import allstars_api
+from Lahman.api import allstars_api
 
 # DB Models
-from db.models.People import People
-from db.models.AllstarApperances import AllstarAppearances
+from Lahman.db.models.People import People
+from Lahman.db.models.AllstarApperances import AllstarAppearances
 
 def top_n_allstars(limit: int = 10):
     """

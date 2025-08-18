@@ -5,19 +5,13 @@ import sys
 
 # My Modules
 from charts import allstar_charts
+import Retrosheet.setup as retrosheet_setup
 
 def run_cli():
     
     print("Starting main function...")
 
-    ###
-    #
-    # Testing queries below
-    #
-    ###
-    # allstar_charts.career_length_vs_allstar_appearances()
-    allstar_charts.age_of_starting_position_by_year(8)
-
+    retrosheet_setup.setup_retrosheet_data()
 
 if __name__ == '__main__':
     run_cli()
