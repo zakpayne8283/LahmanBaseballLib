@@ -1,5 +1,4 @@
-from db.models.AllstarApperances import AllstarAppearances
-from db.models.base_table import TableBase
+from Lahman.db.models.base_table import TableBase
 
 class People(TableBase):
     def __init__(self, ID, playerID, birthYear, birthMonth, birthDay, birthCity, birthCountry, birthState, deathYear, deathMonth, deathDay,

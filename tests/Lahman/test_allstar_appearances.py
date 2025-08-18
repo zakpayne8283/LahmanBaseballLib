@@ -1,6 +1,6 @@
 import pytest
-from db.models.AllstarApperances import AllstarAppearances
-from db.models.People import People
+from Lahman.db.models.AllstarApperances import AllstarAppearances
+from Lahman.db.models.People import People
 
 # Test table_name & table_name_full
 def test_table_name():

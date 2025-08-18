@@ -1,4 +1,4 @@
-from db.models.AllstarApperances import AllstarAppearances
+from Lahman.db.models.AllstarApperances import AllstarAppearances
 
 # TODO: Be able to use a configuration for a lot of these queries
 #       Basically we should be able to do something like top_n_appearances(query_config=query)
@@ -9,7 +9,7 @@ def top_n_appearances(limit: int = 10):
     """
     Returns a list of players whom are in the top N players, by number of allstar appearances.
     """
-    from db.models.People import People
+    from Lahman.db.models.People import People
 
     results = (
         AllstarAppearances.select(People.column("nameFirst"), People.column("nameLast"))
@@ -27,7 +27,7 @@ def top_n_sub_appearances(limit: int = 10):
     """
     Returns a list of players whom are in the top N players, by number of allstar non-starting appearances.
     """
-    from db.models.People import People
+    from Lahman.db.models.People import People
 
     results = (
         AllstarAppearances.select(People.column("nameFirst"), People.column("nameLast"))
@@ -46,7 +46,7 @@ def allstars_career_debuts_and_finales(include_as_game_id=False):
     """
     Returns a list of Allstars (by ID) and their first/last names, debuts, final games, and number of appearances
     """
-    from db.models.People import People
+    from Lahman.db.models.People import People
 
     # Make sure to unpack your columns! e.g. .select(*columns)
     columns = [
@@ -70,7 +70,7 @@ def allstars_starters_information(starting_position=1):
     """
     Returns all People information, plus basic ASG info for all starting players for each game.
     """
-    from db.models.People import People
+    from Lahman.db.models.People import People
 
     """
     SELECT allstars.gameID, allstars.gameNum, allstars.startingPos, p.*

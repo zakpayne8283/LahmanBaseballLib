@@ -1,7 +1,7 @@
 import pytest
-from db.models.AllstarApperances import AllstarAppearances
-from db.models.People import People
-from db.models.query_builder import Query
+from Lahman.db.models.AllstarApperances import AllstarAppearances
+from Lahman.db.models.People import People
+from Lahman.db.models.query_builder import Query
 
 # Test that the class can instantiate
 def test_init():

@@ -1,5 +1,5 @@
 import pytest
-from db.models.People import People
+from Lahman.db.models.People import People
 
 # TODO: Implement the core SQL statements for People too?
 # Unsure it's needed, they're being covered by other tests.

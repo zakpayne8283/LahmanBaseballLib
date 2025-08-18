@@ -1,7 +1,7 @@
 import pytest
 
 # API imports
-from api import allstars_api
+from Lahman.api import allstars_api
 
 def test_allstar_appearances():
     as_appearances = allstars_api.top_n_appearances()

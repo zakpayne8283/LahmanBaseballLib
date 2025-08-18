@@ -14,5 +14,5 @@ export PYTHONPATH=$(pwd)/src
 echo "Checking code coverage..."
 echo "## ✅ Test Results & Coverage" > tests/README.md
 echo '```' >> tests/README.md
-pytest --cov=src --cov-config=.coveragerc --cov-report=term-missing >> tests/README.md
+python -m pytest --cov=src --cov-config=.coveragerc --cov-report=term-missing >> tests/README.md
 echo '```' >> tests/README.md

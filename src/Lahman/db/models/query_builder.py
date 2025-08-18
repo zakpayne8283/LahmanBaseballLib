@@ -321,7 +321,7 @@ class Query:
     def execute(self):
         # Get the cursor from base table class
         # TODO: Probably just want some sort of connector, not in a query-related class...?
-        from db.models.base_table import TableBase
+        from Lahman.db.models.base_table import TableBase
         cursor = TableBase.get_cursor()
 
         # Get the SQL and parameters

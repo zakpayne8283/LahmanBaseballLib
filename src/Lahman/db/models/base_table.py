@@ -1,5 +1,5 @@
-from db.connector import get_connection
-from db.models.query_builder import Query
+from Lahman.db.connector import get_connection
+from Lahman.db.models.query_builder import Query
 
 class TableBase:
 
