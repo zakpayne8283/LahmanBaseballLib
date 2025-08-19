@@ -11,6 +11,7 @@ def run_cli():
     
     print("Starting main function...")
 
+    # Setup the retrosheet data first, to ensure we have it.
     retrosheet_setup.setup_retrosheet_data()
 
 if __name__ == '__main__':
