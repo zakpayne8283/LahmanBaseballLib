@@ -1,7 +1,7 @@
-from Lahman.db.models.base_table import TableBase
+from Lahman.db.models.lahman_table import LahmanTable
 
 #TODO: Fix all instances where I've mistakenly spelled it apperances
-class AllstarAppearances(TableBase):
+class AllstarAppearances(LahmanTable):
     
     # Constructor - used for returning instances of AllstarAppearances in super().select()
     def __init__(self, playerID=None, gameNum=None, gameID=None, yearID=None, teamID=None, lgID=None, GP=None, startingPos=None):

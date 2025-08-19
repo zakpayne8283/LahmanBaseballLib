@@ -1,5 +1,5 @@
-from Lahman.db.connector import get_connection
-from Lahman.db.models.query_builder import Query
+from utils.db.connector import get_connection
+from utils.db.query_builder import Query
 
 class TableBase:
 
@@ -8,10 +8,10 @@ class TableBase:
 
     # Static method for getting the DB connection in the models
     @classmethod
-    def get_connection(cls):
+    def get_connection(cls, enable_autocommit=False):
         # setup connection as needed
         if cls._connection is None:
-            cls._connection = get_connection()
+            cls._connection = get_connection(database_name=cls.database_name, enable_autocommit=enable_autocommit)
         
         # return it
         return cls._connection

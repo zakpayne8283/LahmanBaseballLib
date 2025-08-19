@@ -1,12 +1,18 @@
 import os
 import pyodbc
 
+# Retrosheet data stuff
 import Retrosheet.data.config as retrosheet_configs
-import Retrosheet.data.connector as db_connector
+from Retrosheet.data.models.retrosheet_table import RetrosheetTable
+
+# Data Models
+from Retrosheet.data.models.Game import Game as GameModel
 
 def generate_database_from_event_files():
     # Setup the database first
     establish_retrosheet_database()
+    # Create the base tables in the database
+    establish_retrosheet_database_tables()
 
     # Get the folder where the event files are
     events_folder = os.path.join(retrosheet_configs.base_directory, retrosheet_configs.eves_directory)
@@ -25,15 +31,9 @@ def generate_database_from_event_files():
 
             print(f"Finished parsing file ({event_file_path})!")
 
-
-
-    # Parse the file, and build the database from it
-
-# TODO: Refactor this so the database connection is useable elsewhere.
-# TODO: Also make it so autocommit can be toggled, so CREATE DATABASE can use it, but regular transactions cannot.
 def establish_retrosheet_database():
     # Establish the connection
-    db_connection = db_connector.get_connection(enable_autocommit=True)
+    db_connection = RetrosheetTable.get_connection(enable_autocommit=True)
     # Get the cursor
     cursor = db_connection.cursor()
     # Set the DB name
@@ -54,11 +54,42 @@ def establish_retrosheet_database():
         cursor.execute(f"CREATE DATABASE [{db_name}]")
         db_connection.commit()
 
-def parse_event_file(file_name):
-    """
-    with open("data/_downloads/extracted/game.EVN", "r") as f:
-    for line in f:
-        # line includes the newline at the end, so strip if you don’t want it
-        print(line.strip())
-    """
-    pass
+def establish_retrosheet_database_tables():
+    # TODO: Re-work this so a list of models is provided and it just grabs and creates each one as needed instead
+
+    # Get our models for creation
+    table_creation_string = GameModel.get_table_creation_string()
+
+    # Establish the connection
+    db_connection = RetrosheetTable.get_connection()
+    # Get the cursor
+    cursor = db_connection.cursor()
+
+    # Create the table
+    cursor.execute(table_creation_string)
+
+def parse_event_file(file_path):
+    # Open the event file
+    with open(file_path, "r") as event_file:
+
+        # The current game we're building stats for
+        current_game = None
+
+        # Process each line
+        for line in event_file:
+            # Strip and split the data
+            line_data = line.strip().split(",")
+
+            operation = line_data[0]    # id, start, play, sub, etc.
+
+            if operation == "id":
+                # New game starting, take action accordingly
+                if current_game is not None:
+                    # Flush the current game
+                    current_game.write_to_database()
+                
+                game_id = line_data[1]
+
+                current_game = GameModel(game_id=game_id)
+            
+    # id,ANA202404050

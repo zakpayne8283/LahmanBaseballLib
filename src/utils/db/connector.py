@@ -1,13 +1,8 @@
 import pyodbc
 
-import Retrosheet.data.config as retrosheet_configs
-
 _connection = None
 
-# TODO: Move to an .env file or something
-database_name = retrosheet_configs.retrosheet_database_name
-
-def get_connection(enable_autocommit=False):
+def get_connection(database_name, enable_autocommit=False):
     global _connection
 
     if _connection is None:

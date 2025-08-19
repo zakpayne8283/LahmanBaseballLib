@@ -1,6 +1,6 @@
-from Lahman.db.models.base_table import TableBase
+from Lahman.db.models.lahman_table import LahmanTable
 
-class People(TableBase):
+class People(LahmanTable):
     def __init__(self, ID, playerID, birthYear, birthMonth, birthDay, birthCity, birthCountry, birthState, deathYear, deathMonth, deathDay,
                  deathCountry, deathState, deathCity, nameFirst, nameLast, nameGiven, weight, height, bats, throws, debut, bbrefID, finalGame, retroID):
         self.ID = ID

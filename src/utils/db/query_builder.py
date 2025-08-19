@@ -319,10 +319,13 @@ class Query:
 
     # Executes the query
     def execute(self):
-        # Get the cursor from base table class
-        # TODO: Probably just want some sort of connector, not in a query-related class...?
-        from Lahman.db.models.base_table import TableBase
-        cursor = TableBase.get_cursor()
+        # Get the cursor
+        cursor = None
+        if isinstance(self.from_table, Query):
+            # TODO Make this iterate until we have a cursor...
+            cursor = self.from_table.from_table.get_cursor()
+        else:
+            cursor = self.from_table.get_cursor()
 
         # Get the SQL and parameters
         sql = self.build_query()
