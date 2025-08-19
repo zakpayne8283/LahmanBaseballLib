@@ -4,7 +4,7 @@ import zipfile
 
 import Retrosheet.data.config as retrosheet_configs
 
-def populate_retrosheet_data():
+def download_and_extract_retrosheet_data():
     """
     As needed, downloads and extracts data into the data folder for all retrosheet play-by-play data
     """
