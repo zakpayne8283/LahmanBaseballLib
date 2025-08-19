@@ -14,12 +14,7 @@ def run_cli():
     print("Starting main function...")
 
     # Setup the retrosheet data first, to ensure we have it.
-    # retrosheet_setup.setup_retrosheet_data()
-
-    query = Query(AllstarAppearances.select().as_name("allstars")).select("playerID")
-
-    for person in query.execute():
-        print(person)
+    retrosheet_setup.setup_retrosheet_data()
 
 if __name__ == '__main__':
     run_cli()

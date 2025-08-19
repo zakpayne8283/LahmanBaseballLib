@@ -55,18 +55,8 @@ def establish_retrosheet_database():
         db_connection.commit()
 
 def establish_retrosheet_database_tables():
-    # TODO: Re-work this so a list of models is provided and it just grabs and creates each one as needed instead
-
     # Get our models for creation
-    table_creation_string = GameModel.get_table_creation_string()
-
-    # Establish the connection
-    db_connection = RetrosheetTable.get_connection()
-    # Get the cursor
-    cursor = db_connection.cursor()
-
-    # Create the table
-    cursor.execute(table_creation_string)
+    GameModel.create_table()
 
 def parse_event_file(file_path):
     # Open the event file
@@ -83,13 +73,22 @@ def parse_event_file(file_path):
             operation = line_data[0]    # id, start, play, sub, etc.
 
             if operation == "id":
+                """
+                    Example Data:
+                    id,ANA202404050
+
+                    This data is consistent, and will always follow this format. 
+                """
+                
                 # New game starting, take action accordingly
                 if current_game is not None:
                     # Flush the current game
-                    current_game.write_to_database()
+                    current_game.insert_into_db()
                 
+                # Get the game ID
                 game_id = line_data[1]
 
+                # Create a new game object
                 current_game = GameModel(game_id=game_id)
             
-    # id,ANA202404050
+    

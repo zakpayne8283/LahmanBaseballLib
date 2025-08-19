@@ -5,32 +5,8 @@ LahmanBaseballLib is a project looking to create an easy python wrapper for inte
 - Create/Update documentation for:
     - `Query()` methods
     - Charts available
-- Create classes for each remaining DB Table
-    - Appearances
-    - AwardsManagers
-    - AwardsPlayers
-    - AwardsShareManagers
-    - AwardsSharePlayers
-    - Batting
-    - BattingPost
-    - CollegePlaying
-    - Fielding
-    - FieldingOF
-    - FieldingOFsplit
-    - FieldingPost
-    - HallOfFame
-    - HomeGames
-    - Managers
-    - ManagersHalf
-    - Parks
-    - Pitching
-    - PitchingPost
-    - Salaries
-    - Schools
-    - SeriesPost
-    - Teams
-    - TeamsFranchises
-    - TeamsHalf
+- Create classes for each remaining Lahman DB Table
+
 
 ## Ideas
 - Script for importing data automatically
