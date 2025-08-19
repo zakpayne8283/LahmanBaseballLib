@@ -90,5 +90,20 @@ def parse_event_file(file_path):
 
                 # Create a new game object
                 current_game = GameModel(game_id=game_id)
+            elif operation == "info":
+                """
+                    EXAMPLE DATA:
+                    info,visteam,BOS
+                    info,hometeam,ANA
+                    info,site,ANA01
+                    info,date,2024/04/05
+                """
+
+                info_type = line_data[1]
+
+                if info_type == "visteam":
+                    current_game.set_away_team(line_data[2])
+                elif info_type == "hometeam":
+                    current_game.set_home_team(line_data[2])
             
     
