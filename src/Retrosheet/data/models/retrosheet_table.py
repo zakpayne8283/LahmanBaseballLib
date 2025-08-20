@@ -72,16 +72,20 @@ class RetrosheetTable(TableBase):
         Inserts a new row in the database 
         """
         # Build our list of columns
-        columns = ", ".join(self.fields.keys())
+        columns = ", ".join(
+            field_name for field_name, field_description in self.fields.items() 
+            if "IDENTITY" not in field_description.upper()
+        )
 
         # Build the corresponding list of values for that column
-        values = ", ".join([
-            self._format_value(getattr(self, field), self.fields[field]) # Format the value as needed
-            for field in self.fields.keys()
-        ])
+        values = ", ".join(
+            val for field in self.fields.keys()
+            if (val := self._format_value(getattr(self, field), self.fields[field])) is not None
+        )
 
         # SQL insert statement
         sql = f"INSERT INTO {self.db_table_name} ({columns}) VALUES ({values})"
+        # print(sql)
         self.get_cursor().execute(sql)
         self.get_cursor().commit()
 
@@ -91,7 +95,7 @@ class RetrosheetTable(TableBase):
         """
         # NULL works better than None for DBs
         if value is None:
-            return "NULL"
+            return None
 
         # Put '' around the value if the field is VARCHAR, CHAR, or TEXT
         if (

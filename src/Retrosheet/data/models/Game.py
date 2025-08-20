@@ -29,8 +29,6 @@ class Game(RetrosheetTable):
         if not isinstance(game_date, date):
             raise TypeError("Game() Error - game_date must be a date(YYYY-MM-DD) object")
 
-        print(game_date)
-
         self.game_date = date.strftime(game_date, "%Y-%m-%d")
 
     def set_game_number(self, game_number: int):

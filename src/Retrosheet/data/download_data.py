@@ -21,9 +21,7 @@ def download_and_extract_retrosheet_data():
         # Extract csv file (if needed)
         _extract_retrosheet_data(year)
 
-        print(f"Finished setting up data for year: {year}")
-
-    print(f"Finished populating retrosheet data!")
+        print(f"Finished retrieving/extracting data for year: {year}")
 
 def _download_retrosheet_data(year: int):
     """

@@ -10,6 +10,7 @@ from Retrosheet.data.utils.event_parser import EventParser
 
 # Data Models
 from Retrosheet.data.models.Game import Game as GameModel
+from Retrosheet.data.models.StartingLineup import StartingLineup as StartingLineupModel
 
 def generate_database_from_event_files():
     # Setup the database first
@@ -60,6 +61,7 @@ def establish_retrosheet_database():
 def establish_retrosheet_database_tables():
     # Get our models for creation
     GameModel.create_table()
+    StartingLineupModel.create_table()
 
 def parse_event_file(file_path):
     # Setup the EventParser
@@ -69,3 +71,4 @@ def parse_event_file(file_path):
             
 def drop_tables_from_database():
     GameModel.drop_table()
+    StartingLineupModel.drop_table()
