@@ -5,6 +5,9 @@ import pyodbc
 import Retrosheet.data.config as retrosheet_configs
 from Retrosheet.data.models.retrosheet_table import RetrosheetTable
 
+# Utils
+from Retrosheet.data.utils.event_parser import EventParser
+
 # Data Models
 from Retrosheet.data.models.Game import Game as GameModel
 
@@ -59,51 +62,53 @@ def establish_retrosheet_database_tables():
     GameModel.create_table()
 
 def parse_event_file(file_path):
-    # Open the event file
-    with open(file_path, "r") as event_file:
+    parser = EventParser(file_path=file_path)
+    parser.parse_event_file()
+    # # Open the event file
+    # with open(file_path, "r") as event_file:
 
-        # The current game we're building stats for
-        current_game = None
+    #     # The current game we're building stats for
+    #     current_game = None
 
-        # Process each line
-        for line in event_file:
-            # Strip and split the data
-            line_data = line.strip().split(",")
+    #     # Process each line
+    #     for line in event_file:
+    #         # Strip and split the data
+    #         line_data = line.strip().split(",")
 
-            operation = line_data[0]    # id, start, play, sub, etc.
+    #         operation = line_data[0]    # id, start, play, sub, etc.
 
-            if operation == "id":
-                """
-                    Example Data:
-                    id,ANA202404050
+    #         if operation == "id":
+    #             """
+    #                 Example Data:
+    #                 id,ANA202404050
 
-                    This data is consistent, and will always follow this format. 
-                """
+    #                 This data is consistent, and will always follow this format. 
+    #             """
                 
-                # New game starting, take action accordingly
-                if current_game is not None:
-                    # Flush the current game
-                    current_game.insert_into_db()
+    #             # New game starting, take action accordingly
+    #             if current_game is not None:
+    #                 # Flush the current game
+    #                 current_game.insert_into_db()
                 
-                # Get the game ID
-                game_id = line_data[1]
+    #             # Get the game ID
+    #             game_id = line_data[1]
 
-                # Create a new game object
-                current_game = GameModel(game_id=game_id)
-            elif operation == "info":
-                """
-                    EXAMPLE DATA:
-                    info,visteam,BOS
-                    info,hometeam,ANA
-                    info,site,ANA01
-                    info,date,2024/04/05
-                """
+    #             # Create a new game object
+    #             current_game = GameModel(game_id=game_id)
+    #         elif operation == "info":
+    #             """
+    #                 EXAMPLE DATA:
+    #                 info,visteam,BOS
+    #                 info,hometeam,ANA
+    #                 info,site,ANA01
+    #                 info,date,2024/04/05
+    #             """
 
-                info_type = line_data[1]
+    #             info_type = line_data[1]
 
-                if info_type == "visteam":
-                    current_game.set_away_team(line_data[2])
-                elif info_type == "hometeam":
-                    current_game.set_home_team(line_data[2])
+    #             if info_type == "visteam":
+    #                 current_game.set_away_team(line_data[2])
+    #             elif info_type == "hometeam":
+    #                 current_game.set_home_team(line_data[2])
             
     
