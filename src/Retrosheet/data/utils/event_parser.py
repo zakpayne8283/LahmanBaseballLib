@@ -91,18 +91,17 @@ class EventParser:
         player_lineup_order = line_data[4]
         player_starting_position = line_data[5]
 
-        print(player_id)
-        print(player_is_on_home_team)
-
         # First determine if we need to make a new line up
         if player_is_on_home_team not in self.lineups.keys():
             game_id = self.current_game.game_id
-            team_id = self.current_game.home_team if player_is_on_home_team == 1 else self.current_game.away_team
+            team_id = self.current_game.home_team if player_is_on_home_team == '1' else self.current_game.away_team
             home_team = player_is_on_home_team
-
-            print(game_id, team_id, home_team)
 
             self.lineups[player_is_on_home_team] = StartingLineupModel(game_id=game_id, team_id=team_id, home_team=home_team)
 
         # Populate the lineup with data
-        # For now, that means nothing!
+
+        # Player's lineup order placement
+        self.lineups[player_is_on_home_team].set_player_in_batting_order(player_id=player_id, order_number=player_lineup_order)
+        # Player's starting position
+        self.lineups[player_is_on_home_team].set_player_starting_position(player_id=player_id, starting_position=player_starting_position)
