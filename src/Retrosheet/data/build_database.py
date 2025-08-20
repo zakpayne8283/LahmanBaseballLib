@@ -62,53 +62,10 @@ def establish_retrosheet_database_tables():
     GameModel.create_table()
 
 def parse_event_file(file_path):
+    # Setup the EventParser
     parser = EventParser(file_path=file_path)
+    # Run it
     parser.parse_event_file()
-    # # Open the event file
-    # with open(file_path, "r") as event_file:
-
-    #     # The current game we're building stats for
-    #     current_game = None
-
-    #     # Process each line
-    #     for line in event_file:
-    #         # Strip and split the data
-    #         line_data = line.strip().split(",")
-
-    #         operation = line_data[0]    # id, start, play, sub, etc.
-
-    #         if operation == "id":
-    #             """
-    #                 Example Data:
-    #                 id,ANA202404050
-
-    #                 This data is consistent, and will always follow this format. 
-    #             """
-                
-    #             # New game starting, take action accordingly
-    #             if current_game is not None:
-    #                 # Flush the current game
-    #                 current_game.insert_into_db()
-                
-    #             # Get the game ID
-    #             game_id = line_data[1]
-
-    #             # Create a new game object
-    #             current_game = GameModel(game_id=game_id)
-    #         elif operation == "info":
-    #             """
-    #                 EXAMPLE DATA:
-    #                 info,visteam,BOS
-    #                 info,hometeam,ANA
-    #                 info,site,ANA01
-    #                 info,date,2024/04/05
-    #             """
-
-    #             info_type = line_data[1]
-
-    #             if info_type == "visteam":
-    #                 current_game.set_away_team(line_data[2])
-    #             elif info_type == "hometeam":
-    #                 current_game.set_home_team(line_data[2])
             
-    
+def drop_tables_from_database():
+    GameModel.drop_table()

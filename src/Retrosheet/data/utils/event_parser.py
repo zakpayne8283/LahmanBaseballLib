@@ -1,3 +1,5 @@
+from datetime import date, datetime
+
 from Retrosheet.data.models.Game import Game as GameModel
 
 class EventParser:
@@ -31,7 +33,7 @@ class EventParser:
                 if handler:
                     handler(line_data)
                 else:
-                    print(f"Unknown operation: {operation}")
+                    pass#print(f"Unknown operation: {operation}")
 
     # Handles operation="id" -- start of new game
     def handle_id(self, line_data):
@@ -49,9 +51,15 @@ class EventParser:
     def handle_info(self, line_data):
         # Get the info type
         info_type = line_data[1]
+        # Get the value of the info row
+        info_value = line_data[2]
 
         # If/elif/else block to determine how that information is stored
         if info_type == "visteam":
-            self.current_game.set_away_team(line_data[2])
+            self.current_game.set_away_team(info_value)
         elif info_type == "hometeam":
-            self.current_game.set_home_team(line_data[2])
+            self.current_game.set_home_team(info_value)
+        elif info_type == "date":
+            self.current_game.set_game_date(datetime.strptime(info_value, "%Y/%m/%d").date())
+        elif info_type == "number":
+            self.current_game.set_game_number(info_value)
