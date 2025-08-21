@@ -1,5 +1,3 @@
-from datetime import date
-
 from Retrosheet.data.models.retrosheet_table import RetrosheetTable
 
 class StartingLineup(RetrosheetTable):
